@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI RAG - Vercel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .container { width: 100%; max-width: 900px; background: #1e293b; border-radius: 16px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        h1 { font-size: 1.8rem; background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status { background: #065f46; color: #34d399; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .status .dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .chat-area { background: #0f172a; border-radius: 12px; padding: 20px; height: 450px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #334155; }
+        .message { margin-bottom: 12px; display: flex; }
+        .message.user { justify-content: flex-end; }
+        .message.ai { justify-content: flex-start; }
+        .message .bubble { max-width: 80%; padding: 10px 16px; border-radius: 12px; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
+        .message.user .bubble { background: #3b82f6; color: white; border-bottom-right-radius: 4px; }
+        .message.ai .bubble { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-bottom-left-radius: 4px; }
+        .input-area { display: flex; gap: 10px; }
+        .input-area input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 0.95rem; outline: none; }
+        .input-area input:focus { border-color: #3b82f6; }
+        .input-area button { padding: 12px 28px; background: #3b82f6; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.3s; }
+        .input-area button:hover { background: #2563eb; }
+        .input-area button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #1e293b; border-top: 2px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .footer { margin-top: 20px; text-align: center; font-size: 0.8rem; color: #64748b; }
+        .footer a { color: #60a5fa; text-decoration: none; }
+        .command-hint { background: #1e293b; padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; color: #94a3b8; border-left: 3px solid #3b82f6; }
+        .command-hint code { background: #0f172a; padding: 2px 8px; border-radius: 4px; color: #60a5fa; font-family: monospace; }
+        @media (max-width: 600px) { .input-area { flex-direction: column; } .input-area button { width: 100%; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI RAG</h1>
+            <div class="status">
+                <span class="dot"></span>
+                <span id="statusText">Online</span>
+            </div>
+        </div>
+        
+        <div class="command-hint">
+            💡 <b>Tips:</b> Ketik <code>buka [mapel] [file]</code> untuk preview dokumen, atau tanyakan pertanyaan tentang konten.
+        </div>
+        
+        <div class="chat-area" id="chatArea">
+            <div style="text-align: center; color: #64748b; padding: 40px 20px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">💬</div>
+                <p>Mulai chat dengan AI RAG</p>
+                <p style="font-size: 0.8rem; margin-top: 8px;">Tanyakan tentang dokumen yang sudah diupload</p>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="promptInput" placeholder="Ketik pertanyaan..." onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button id="sendBtn" onclick="sendMessage()">Kirim</button>
+        </div>
+        
+        <div class="footer">
+            🧠 AI berjalan di Termux | <a href="#" onclick="reloadKnowledge()">Reload Knowledge</a>
+        </div>
+    </div>
+
+    <script>
+        // ============ KONFIGURASI ============
+        // GANTI DENGAN URL TERMUX KAMU (NGROK / IP PUBLIK)
+        const API_URL = 'https://YOUR_NGROK_URL.ngrok.io';  // <-- GANTI INI!
+        
+        // ============ ELEMEN ============
+        const chatArea = document.getElementById('chatArea');
+        const promptInput = document.getElementById('promptInput');
+        const sendBtn = document.getElementById('sendBtn');
+        
+        // ============ FUNGSI ============
+        function addMessage(type, content) {
+            const placeholder = chatArea.querySelector('div[style]');
+            if (placeholder && placeholder.style.textAlign === 'center') {
+                placeholder.remove();
+            }
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = `message ${type}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            
+            if (type === 'loading') {
+                bubble.innerHTML = `<span class="loading"></span> ${content}`;
+            } else {
+                bubble.textContent = content;
+            }
+            
+            wrapper.appendChild(bubble);
+            chatArea.appendChild(wrapper);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            return wrapper;
+        }
+        
+        function removeLoading() {
+            const loading = chatArea.querySelector('.message.loading');
+            if (loading) loading.remove();
+        }
+        
+        async function sendMessage() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+            
+            addMessage('user', prompt);
+            promptInput.value = '';
+            sendBtn.disabled = true;
+            promptInput.disabled = true;
+            
+            const loadingMsg = addMessage('loading', 'Memproses...');
+            
+            try {
+                const response = await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                
+                const data = await response.json();
+                loadingMsg.remove();
+                
+                if (data.status === 'error') {
+                    addMessage('ai', '❌ ' + data.message);
+                } else {
+                    addMessage('ai', data.answer);
+                }
+                
+                if (data.action === 'preview') {
+                    window.open(`${API_URL}/files/${data.filename}`, '_blank');
+                    addMessage('ai', `📂 File "${data.filename}" dibuka di tab baru.`);
+                }
+                
+            } catch (error) {
+                loadingMsg.remove();
+                addMessage('ai', '❌ Gagal terhubung ke server AI di Termux. Pastikan server berjalan dan URL ngrok benar.');
+                console.error('Error:', error);
+            } finally {
+                sendBtn.disabled = false;
+                promptInput.disabled = false;
+                promptInput.focus();
+            }
+        }
+        
+        async function reloadKnowledge() {
+            try {
+                const response = await fetch(`${API_URL}/reload`, { method: 'POST' });
+                const data = await response.json();
+                addMessage('ai', `✅ Knowledge base reloaded! Total entries: ${data.total_entries}`);
+            } catch (e) {
+                addMessage('ai', '❌ Gagal reload knowledge base.');
+            }
+            return false;
+        }
+        
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${API_URL}/status`);
+                if (response.ok) {
+                    document.getElementById('statusText').textContent = 'Online';
+                    document.querySelector('.status').style.background = '#065f46';
+                    document.querySelector('.status').style.color = '#34d399';
+                }
+            } catch (e) {
+                document.getElementById('statusText').textContent = 'Offline';
+                document.querySelector('.status').style.background = '#7f1d1d';
+                document.querySelector('.status').style.color = '#fca5a5';
+            }
+        }
+        
+        checkConnection();
+        setInterval(checkConnection, 30000);
+    </script>
+</body>
+</html>
