@@ -102,8 +102,14 @@
             color: #64748b;
             margin-top: 4px;
         }
-        .retry-btn {
+        .btn-group {
+            display: flex;
+            gap: 12px;
             margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .retry-btn {
             padding: 14px 40px;
             background: #3b82f6;
             color: white;
@@ -116,6 +122,8 @@
         }
         .retry-btn:hover { background: #2563eb; transform: scale(1.02); }
         .retry-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .retry-btn.danger { background: #dc2626; }
+        .retry-btn.danger:hover { background: #b91c1c; }
         .retry-btn .spinner {
             display: inline-block;
             width: 16px;
@@ -176,10 +184,10 @@
         .message.user .bubble { background: #3b82f6; color: white; border-bottom-right-radius: 4px; }
         .message.ai .bubble { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-bottom-left-radius: 4px; }
         .message.loading .bubble { background: #1e293b; border: 1px solid #334155; color: #94a3b8; }
-        .loading-dots { display: inline-flex; gap: 4px; align-items: center; margin-right: 8px; }
-        .loading-dots span { width: 8px; height: 8px; background: #60a5fa; border-radius: 50%; animation: bounce 1.4s infinite both; }
-        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        .loading-dots-chat { display: inline-flex; gap: 4px; align-items: center; margin-right: 8px; }
+        .loading-dots-chat span { width: 8px; height: 8px; background: #60a5fa; border-radius: 50%; animation: bounce 1.4s infinite both; }
+        .loading-dots-chat span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots-chat span:nth-child(2) { animation-delay: -0.16s; }
         
         /* ===== INPUT ===== */
         .input-area { display: flex; gap: 10px; }
@@ -237,10 +245,15 @@
         <div class="icon">🔧</div>
         <h1>Server Offline</h1>
         <p>AI Server tidak dapat dihubungi.</p>
-        <p class="detail">Pastikan Termux berjalan dan tunnel Serveo aktif.</p>
-        <button class="retry-btn" id="retryBtn" onclick="checkConnection()">
-            🔄 Coba Hubungkan
-        </button>
+        <p class="detail">Pastikan Termux berjalan dan tunnel aktif.</p>
+        <div class="btn-group">
+            <button class="retry-btn" id="retryBtn" onclick="checkConnection()">
+                🔄 Coba Hubungkan
+            </button>
+            <button class="retry-btn danger" onclick="forceReset()">
+                🔓 Reset & Coba Ulang
+            </button>
+        </div>
         <p style="margin-top: 20px; font-size: 0.75rem; color: #64748b;">
             Terakhir cek: <span id="lastCheckTime">-</span>
         </p>
@@ -297,6 +310,32 @@
         let isOnline = false;
         let isProcessing = false;
         let isFirstCheck = true;
+        let checkInterval = null;
+        
+        // ============ FORCE RESET (UNLOCK) ============
+        function forceReset() {
+            // Clear semua state
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Reset UI
+            maintenancePage.classList.remove('show');
+            loadingScreen.classList.remove('hidden');
+            loadingScreen.style.display = 'flex';
+            
+            // Reset status
+            isOnline = false;
+            isFirstCheck = true;
+            
+            // Hapus interval lama
+            if (checkInterval) {
+                clearInterval(checkInterval);
+                checkInterval = null;
+            }
+            
+            // Reload halaman dari server (force)
+            location.reload(true);
+        }
         
         // ============ STATUS MANAGEMENT ============
         function updateStatus(status, message) {
@@ -360,6 +399,11 @@
                         promptInput.disabled = false;
                         sendBtn.disabled = false;
                     }
+                    
+                    // Setup auto-check setiap 30 detik
+                    if (!checkInterval) {
+                        checkInterval = setInterval(checkConnection, 30000);
+                    }
                 } else {
                     throw new Error('Response not OK');
                 }
@@ -399,7 +443,7 @@
             
             if (type === 'loading') {
                 bubble.innerHTML = `
-                    <div class="loading-dots">
+                    <div class="loading-dots-chat">
                         <span></span><span></span><span></span>
                     </div>
                     ${content}
@@ -501,9 +545,6 @@
         // ============ START ============
         // Cek koneksi saat load
         setTimeout(checkConnection, 500);
-        
-        // Auto check tiap 30 detik
-        setInterval(checkConnection, 30000);
     </script>
 </body>
 </html>
