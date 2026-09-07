@@ -10,13 +10,9 @@
         .container { width: 100%; max-width: 900px; background: #1e293b; border-radius: 16px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         h1 { font-size: 1.8rem; background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .status { padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-        .status.online { background: #065f46; color: #34d399; }
-        .status.offline { background: #7f1d1d; color: #fca5a5; }
-        .status .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .status.online .dot { background: #34d399; }
-        .status.offline .dot { background: #fca5a5; animation: blink 1s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .status { background: #065f46; color: #34d399; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .status .dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         .chat-area { background: #0f172a; border-radius: 12px; padding: 20px; height: 450px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #334155; }
         .message { margin-bottom: 12px; display: flex; }
         .message.user { justify-content: flex-end; }
@@ -24,22 +20,18 @@
         .message .bubble { max-width: 80%; padding: 10px 16px; border-radius: 12px; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
         .message.user .bubble { background: #3b82f6; color: white; border-bottom-right-radius: 4px; }
         .message.ai .bubble { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-bottom-left-radius: 4px; }
-        .message.loading .bubble { background: #1e293b; border: 1px solid #334155; color: #94a3b8; }
-        .loading-dots { display: inline-flex; gap: 4px; align-items: center; margin-right: 8px; }
-        .loading-dots span { width: 8px; height: 8px; background: #60a5fa; border-radius: 50%; animation: bounce 1.4s infinite both; }
-        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         .input-area { display: flex; gap: 10px; }
         .input-area input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 0.95rem; outline: none; }
         .input-area input:focus { border-color: #3b82f6; }
-        .input-area input:disabled { opacity: 0.5; cursor: not-allowed; }
         .input-area button { padding: 12px 28px; background: #3b82f6; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.3s; }
         .input-area button:hover { background: #2563eb; }
         .input-area button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #1e293b; border-top: 2px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .footer { margin-top: 20px; text-align: center; font-size: 0.8rem; color: #64748b; }
-        .footer a { color: #60a5fa; text-decoration: none; cursor: pointer; }
-        .footer a:hover { text-decoration: underline; }
+        .footer a { color: #60a5fa; text-decoration: none; }
+        .command-hint { background: #1e293b; padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; color: #94a3b8; border-left: 3px solid #3b82f6; }
+        .command-hint code { background: #0f172a; padding: 2px 8px; border-radius: 4px; color: #60a5fa; font-family: monospace; }
         @media (max-width: 600px) { .input-area { flex-direction: column; } .input-area button { width: 100%; } }
     </style>
 </head>
@@ -47,188 +39,144 @@
     <div class="container">
         <div class="header">
             <h1>🤖 AI RAG</h1>
-            <div class="status offline" id="statusBadge">
+            <div class="status">
                 <span class="dot"></span>
-                <span id="statusText">Offline</span>
+                <span id="statusText">Online</span>
             </div>
         </div>
-
+        
+        <div class="command-hint">
+            💡 <b>Tips:</b> Ketik <code>buka [mapel] [file]</code> untuk preview dokumen, atau tanyakan pertanyaan tentang konten.
+        </div>
+        
         <div class="chat-area" id="chatArea">
-            <div id="chatMessages">
-                <div style="text-align: center; color: #64748b; padding: 40px 20px;">
-                    <div style="font-size: 48px; margin-bottom: 10px;">💬</div>
-                    <p>Mulai chat dengan AI RAG</p>
-                    <p style="font-size: 0.8rem; margin-top: 8px;">Tanyakan tentang dokumen yang sudah diupload</p>
-                </div>
+            <div style="text-align: center; color: #64748b; padding: 40px 20px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">💬</div>
+                <p>Mulai chat dengan AI RAG</p>
+                <p style="font-size: 0.8rem; margin-top: 8px;">Tanyakan tentang dokumen yang sudah diupload</p>
             </div>
         </div>
-
+        
         <div class="input-area">
-            <input type="text" id="promptInput" placeholder="Ketik pertanyaan..." onkeypress="if(event.key === 'Enter') sendMessage()" disabled>
-            <button id="sendBtn" onclick="sendMessage()" disabled>Kirim</button>
+            <input type="text" id="promptInput" placeholder="Ketik pertanyaan..." onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button id="sendBtn" onclick="sendMessage()">Kirim</button>
         </div>
-
+        
         <div class="footer">
-            🧠 AI berjalan di Termux |
-            <a onclick="reloadKnowledge()">Reload Knowledge</a> |
-            <a onclick="checkConnection()">🔄 Cek Status</a>
+            🧠 AI berjalan di Termux | <a href="#" onclick="reloadKnowledge()">Reload Knowledge</a>
         </div>
     </div>
 
     <script>
-        const API_URL = 'https://av.serveo.net';  // Ganti dengan URL serveo kamu
-
-        const chatMessages = document.getElementById('chatMessages');
+        // ============ KONFIGURASI ============
+        // GANTI DENGAN URL TERMUX KAMU (NGROK / IP PUBLIK)
+        const API_URL = 'https://YOUR_NGROK_URL.ngrok.io';  // <-- GANTI INI!
+        
+        // ============ ELEMEN ============
+        const chatArea = document.getElementById('chatArea');
         const promptInput = document.getElementById('promptInput');
         const sendBtn = document.getElementById('sendBtn');
-        const statusBadge = document.getElementById('statusBadge');
-        const statusText = document.getElementById('statusText');
-
-        let isOnline = false;
-        let isProcessing = false;
-
-        function updateStatus(online) {
-            isOnline = online;
-            if (online) {
-                statusBadge.className = 'status online';
-                statusText.textContent = 'Online';
-                if (!isProcessing) {
-                    promptInput.disabled = false;
-                    sendBtn.disabled = false;
-                }
-            } else {
-                statusBadge.className = 'status offline';
-                statusText.textContent = 'Offline';
-                promptInput.disabled = true;
-                sendBtn.disabled = true;
-            }
-        }
-
-        async function checkConnection() {
-            try {
-                const response = await fetch(`${API_URL}/status`, {
-                    signal: AbortSignal.timeout(5000)
-                });
-                if (response.ok) {
-                    updateStatus(true);
-                } else {
-                    updateStatus(false);
-                }
-            } catch (error) {
-                console.error('Connection check failed:', error);
-                updateStatus(false);
-            }
-        }
-
+        
+        // ============ FUNGSI ============
         function addMessage(type, content) {
-            const placeholder = chatMessages.querySelector('div[style]');
+            const placeholder = chatArea.querySelector('div[style]');
             if (placeholder && placeholder.style.textAlign === 'center') {
                 placeholder.remove();
             }
-
+            
             const wrapper = document.createElement('div');
             wrapper.className = `message ${type}`;
-
+            
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
-
+            
             if (type === 'loading') {
-                bubble.innerHTML = `
-                    <div class="loading-dots">
-                        <span></span><span></span><span></span>
-                    </div>
-                    ${content}
-                `;
+                bubble.innerHTML = `<span class="loading"></span> ${content}`;
             } else {
                 bubble.textContent = content;
             }
-
+            
             wrapper.appendChild(bubble);
-            chatMessages.appendChild(wrapper);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            chatArea.appendChild(wrapper);
+            chatArea.scrollTop = chatArea.scrollHeight;
             return wrapper;
         }
-
+        
         function removeLoading() {
-            const loading = chatMessages.querySelector('.message.loading');
+            const loading = chatArea.querySelector('.message.loading');
             if (loading) loading.remove();
         }
-
+        
         async function sendMessage() {
-            if (isProcessing || !isOnline) return;
-
             const prompt = promptInput.value.trim();
             if (!prompt) return;
-
+            
             addMessage('user', prompt);
             promptInput.value = '';
-
-            isProcessing = true;
-            promptInput.disabled = true;
             sendBtn.disabled = true;
-
+            promptInput.disabled = true;
+            
             const loadingMsg = addMessage('loading', 'Memproses...');
-
+            
             try {
                 const response = await fetch(`${API_URL}/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt }),
-                    signal: AbortSignal.timeout(30000)
+                    body: JSON.stringify({ prompt: prompt })
                 });
-
-                loadingMsg.remove();
-
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-
+                
                 const data = await response.json();
-
+                loadingMsg.remove();
+                
                 if (data.status === 'error') {
                     addMessage('ai', '❌ ' + data.message);
                 } else {
                     addMessage('ai', data.answer);
                 }
-
+                
+                if (data.action === 'preview') {
+                    window.open(`${API_URL}/files/${data.filename}`, '_blank');
+                    addMessage('ai', `📂 File "${data.filename}" dibuka di tab baru.`);
+                }
+                
             } catch (error) {
                 loadingMsg.remove();
+                addMessage('ai', '❌ Gagal terhubung ke server AI di Termux. Pastikan server berjalan dan URL ngrok benar.');
                 console.error('Error:', error);
-
-                if (error.name === 'TimeoutError') {
-                    addMessage('ai', '⏰ Server tidak merespon (timeout). Coba lagi.');
-                } else {
-                    addMessage('ai', '❌ Gagal terhubung ke server. Cek koneksi Termux.');
-                    checkConnection();
-                }
             } finally {
-                isProcessing = false;
-                if (isOnline) {
-                    promptInput.disabled = false;
-                    sendBtn.disabled = false;
-                }
+                sendBtn.disabled = false;
+                promptInput.disabled = false;
                 promptInput.focus();
             }
         }
-
+        
         async function reloadKnowledge() {
-            if (!isOnline) {
-                addMessage('ai', '❌ Server offline. Tidak bisa reload.');
-                return;
-            }
-
-            const loadingMsg = addMessage('loading', 'Reloading...');
             try {
                 const response = await fetch(`${API_URL}/reload`, { method: 'POST' });
                 const data = await response.json();
-                loadingMsg.remove();
-                addMessage('ai', `✅ Knowledge reloaded! Total: ${data.total_entries}`);
-            } catch (error) {
-                loadingMsg.remove();
-                addMessage('ai', '❌ Gagal reload knowledge.');
+                addMessage('ai', `✅ Knowledge base reloaded! Total entries: ${data.total_entries}`);
+            } catch (e) {
+                addMessage('ai', '❌ Gagal reload knowledge base.');
+            }
+            return false;
+        }
+        
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${API_URL}/status`);
+                if (response.ok) {
+                    document.getElementById('statusText').textContent = 'Online';
+                    document.querySelector('.status').style.background = '#065f46';
+                    document.querySelector('.status').style.color = '#34d399';
+                }
+            } catch (e) {
+                document.getElementById('statusText').textContent = 'Offline';
+                document.querySelector('.status').style.background = '#7f1d1d';
+                document.querySelector('.status').style.color = '#fca5a5';
             }
         }
-
-        // Start
-        setTimeout(checkConnection, 500);
+        
+        checkConnection();
         setInterval(checkConnection, 30000);
     </script>
 </body>
