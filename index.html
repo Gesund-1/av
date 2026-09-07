@@ -10,28 +10,147 @@
         .container { width: 100%; max-width: 900px; background: #1e293b; border-radius: 16px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         h1 { font-size: 1.8rem; background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .status { background: #065f46; color: #34d399; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-        .status .dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; animation: pulse 2s infinite; }
+        
+        /* Status Indicator */
+        .status { 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        .status.online { background: #065f46; color: #34d399; }
+        .status.offline { background: #7f1d1d; color: #fca5a5; animation: blink 1s infinite; }
+        .status.checking { background: #1e3a5f; color: #60a5fa; }
+        .status .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .status.online .dot { background: #34d399; }
+        .status.offline .dot { background: #fca5a5; }
+        .status.checking .dot { background: #60a5fa; animation: pulse 1s infinite; }
+        
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .chat-area { background: #0f172a; border-radius: 12px; padding: 20px; height: 450px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #334155; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        /* Chat Area */
+        .chat-area { 
+            background: #0f172a; 
+            border-radius: 12px; 
+            padding: 20px; 
+            height: 450px; 
+            overflow-y: auto; 
+            margin-bottom: 15px; 
+            border: 1px solid #334155;
+            position: relative;
+        }
+        
+        /* Maintenance Overlay */
+        .maintenance-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 12px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            padding: 30px;
+            text-align: center;
+        }
+        .maintenance-overlay.show { display: flex; }
+        .maintenance-overlay .icon { font-size: 64px; margin-bottom: 20px; }
+        .maintenance-overlay h2 { color: #fca5a5; margin-bottom: 10px; }
+        .maintenance-overlay p { color: #94a3b8; font-size: 0.9rem; max-width: 400px; line-height: 1.6; }
+        .retry-btn {
+            margin-top: 20px;
+            padding: 10px 28px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .retry-btn:hover { background: #2563eb; }
+        .retry-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Messages */
         .message { margin-bottom: 12px; display: flex; }
         .message.user { justify-content: flex-end; }
         .message.ai { justify-content: flex-start; }
-        .message .bubble { max-width: 80%; padding: 10px 16px; border-radius: 12px; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
+        .message .bubble { 
+            max-width: 80%; 
+            padding: 10px 16px; 
+            border-radius: 12px; 
+            font-size: 0.9rem; 
+            line-height: 1.6; 
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+        }
         .message.user .bubble { background: #3b82f6; color: white; border-bottom-right-radius: 4px; }
         .message.ai .bubble { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-bottom-left-radius: 4px; }
+        
+        /* Loading Animation */
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
+            background: #60a5fa;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite both;
+        }
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        
+        .message.loading .bubble {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #94a3b8;
+        }
+        
+        /* Input Area */
         .input-area { display: flex; gap: 10px; }
-        .input-area input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 0.95rem; outline: none; }
+        .input-area input { 
+            flex: 1; 
+            padding: 12px 16px; 
+            border-radius: 10px; 
+            border: 1px solid #334155; 
+            background: #0f172a; 
+            color: #e2e8f0; 
+            font-size: 0.95rem; 
+            outline: none; 
+            transition: border-color 0.3s;
+        }
         .input-area input:focus { border-color: #3b82f6; }
-        .input-area button { padding: 12px 28px; background: #3b82f6; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.3s; }
+        .input-area input:disabled { opacity: 0.5; cursor: not-allowed; }
+        .input-area button { 
+            padding: 12px 28px; 
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: background 0.3s;
+        }
         .input-area button:hover { background: #2563eb; }
         .input-area button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #1e293b; border-top: 2px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
         .footer { margin-top: 20px; text-align: center; font-size: 0.8rem; color: #64748b; }
-        .footer a { color: #60a5fa; text-decoration: none; }
-        .command-hint { background: #1e293b; padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; color: #94a3b8; border-left: 3px solid #3b82f6; }
-        .command-hint code { background: #0f172a; padding: 2px 8px; border-radius: 4px; color: #60a5fa; font-family: monospace; }
+        .footer a { color: #60a5fa; text-decoration: none; cursor: pointer; }
+        .footer a:hover { text-decoration: underline; }
+        
         @media (max-width: 600px) { .input-area { flex-direction: column; } .input-area button { width: 100%; } }
     </style>
 </head>
@@ -39,21 +158,33 @@
     <div class="container">
         <div class="header">
             <h1>🤖 AI RAG</h1>
-            <div class="status">
+            <div class="status online" id="statusBadge">
                 <span class="dot"></span>
                 <span id="statusText">Online</span>
             </div>
         </div>
         
-        <div class="command-hint">
-            💡 <b>Tips:</b> Ketik <code>buka [mapel] [file]</code> untuk preview dokumen, atau tanyakan pertanyaan tentang konten.
-        </div>
-        
         <div class="chat-area" id="chatArea">
-            <div style="text-align: center; color: #64748b; padding: 40px 20px;">
-                <div style="font-size: 48px; margin-bottom: 10px;">💬</div>
-                <p>Mulai chat dengan AI RAG</p>
-                <p style="font-size: 0.8rem; margin-top: 8px;">Tanyakan tentang dokumen yang sudah diupload</p>
+            <!-- Maintenance Overlay -->
+            <div class="maintenance-overlay" id="maintenanceOverlay">
+                <div class="icon">🔧</div>
+                <h2>Server Offline</h2>
+                <p>AI Server sedang dalam perbaikan atau tidak terhubung. Pastikan Termux dan tunnel berjalan.</p>
+                <button class="retry-btn" id="retryBtn" onclick="checkConnection()">
+                    🔄 Coba Lagi
+                </button>
+                <p style="margin-top: 15px; font-size: 0.75rem; color: #64748b;">
+                    Terakhir cek: <span id="lastCheckTime">-</span>
+                </p>
+            </div>
+            
+            <!-- Chat Messages -->
+            <div id="chatMessages">
+                <div style="text-align: center; color: #64748b; padding: 40px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">💬</div>
+                    <p>Mulai chat dengan AI RAG</p>
+                    <p style="font-size: 0.8rem; margin-top: 8px;">Tanyakan tentang dokumen yang sudah diupload</p>
+                </div>
             </div>
         </div>
         
@@ -63,23 +194,82 @@
         </div>
         
         <div class="footer">
-            🧠 AI berjalan di Termux | <a href="#" onclick="reloadKnowledge()">Reload Knowledge</a>
+            🧠 AI berjalan di Termux | <a onclick="reloadKnowledge()">Reload Knowledge</a> | 
+            <a onclick="checkConnection()">🔄 Cek Status</a>
         </div>
     </div>
 
     <script>
         // ============ KONFIGURASI ============
-        // GANTI DENGAN URL TERMUX KAMU (NGROK / IP PUBLIK)
-        const API_URL = 'https://av.serveousercontent.com';  // <-- GANTI INI!
+        const API_URL = 'https://av.serveo.net';  // Ganti dengan URL serveo kamu
         
         // ============ ELEMEN ============
         const chatArea = document.getElementById('chatArea');
+        const chatMessages = document.getElementById('chatMessages');
         const promptInput = document.getElementById('promptInput');
         const sendBtn = document.getElementById('sendBtn');
+        const statusBadge = document.getElementById('statusBadge');
+        const statusText = document.getElementById('statusText');
+        const maintenanceOverlay = document.getElementById('maintenanceOverlay');
+        const retryBtn = document.getElementById('retryBtn');
+        const lastCheckTime = document.getElementById('lastCheckTime');
         
-        // ============ FUNGSI ============
+        let isOnline = true;
+        let isProcessing = false;
+        
+        // ============ STATUS MANAGEMENT ============
+        function updateStatus(status, message) {
+            statusBadge.className = 'status ' + status;
+            statusText.textContent = message;
+            
+            if (status === 'offline') {
+                maintenanceOverlay.classList.add('show');
+                promptInput.disabled = true;
+                sendBtn.disabled = true;
+            } else {
+                maintenanceOverlay.classList.remove('show');
+                if (!isProcessing) {
+                    promptInput.disabled = false;
+                    sendBtn.disabled = false;
+                }
+            }
+        }
+        
+        // ============ CEK KONEKSI ============
+        async function checkConnection() {
+            retryBtn.disabled = true;
+            retryBtn.textContent = '⏳ Mengecek...';
+            updateStatus('checking', 'Mengecek...');
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${API_URL}/status`, {
+                    signal: AbortSignal.timeout(5000)
+                });
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                
+                if (response.ok) {
+                    isOnline = true;
+                    updateStatus('online', 'Online (' + elapsed + 's)');
+                    lastCheckTime.textContent = new Date().toLocaleTimeString();
+                } else {
+                    throw new Error('Response not OK');
+                }
+            } catch (error) {
+                console.error('Connection check failed:', error);
+                isOnline = false;
+                updateStatus('offline', 'Offline');
+                lastCheckTime.textContent = new Date().toLocaleTimeString();
+            } finally {
+                retryBtn.disabled = false;
+                retryBtn.textContent = '🔄 Coba Lagi';
+            }
+        }
+        
+        // ============ TAMBAH PESAN ============
         function addMessage(type, content) {
-            const placeholder = chatArea.querySelector('div[style]');
+            // Hapus placeholder
+            const placeholder = chatMessages.querySelector('div[style]');
             if (placeholder && placeholder.style.textAlign === 'center') {
                 placeholder.remove();
             }
@@ -91,42 +281,66 @@
             bubble.className = 'bubble';
             
             if (type === 'loading') {
-                bubble.innerHTML = `<span class="loading"></span> ${content}`;
+                bubble.innerHTML = `
+                    <div class="loading-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    ${content}
+                `;
             } else {
                 bubble.textContent = content;
             }
             
             wrapper.appendChild(bubble);
-            chatArea.appendChild(wrapper);
+            chatMessages.appendChild(wrapper);
             chatArea.scrollTop = chatArea.scrollHeight;
             return wrapper;
         }
         
         function removeLoading() {
-            const loading = chatArea.querySelector('.message.loading');
+            const loading = chatMessages.querySelector('.message.loading');
             if (loading) loading.remove();
         }
         
+        // ============ SEND MESSAGE ============
         async function sendMessage() {
+            if (isProcessing) return;
+            
             const prompt = promptInput.value.trim();
             if (!prompt) return;
             
+            // Cek offline dulu
+            if (!isOnline) {
+                addMessage('ai', '❌ Server sedang offline. Coba klik "Cek Status" untuk refresh.');
+                return;
+            }
+            
+            // Tampilkan pesan user
             addMessage('user', prompt);
             promptInput.value = '';
-            sendBtn.disabled = true;
-            promptInput.disabled = true;
             
+            isProcessing = true;
+            promptInput.disabled = true;
+            sendBtn.disabled = true;
+            
+            // Loading
             const loadingMsg = addMessage('loading', 'Memproses...');
             
             try {
                 const response = await fetch(`${API_URL}/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt })
+                    body: JSON.stringify({ prompt: prompt }),
+                    signal: AbortSignal.timeout(30000) // 30 detik timeout
                 });
                 
-                const data = await response.json();
                 loadingMsg.remove();
+                
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                
+                const data = await response.json();
                 
                 if (data.status === 'error') {
                     addMessage('ai', '❌ ' + data.message);
@@ -134,50 +348,54 @@
                     addMessage('ai', data.answer);
                 }
                 
-                if (data.action === 'preview') {
-                    window.open(`${API_URL}/files/${data.filename}`, '_blank');
-                    addMessage('ai', `📂 File "${data.filename}" dibuka di tab baru.`);
-                }
-                
             } catch (error) {
                 loadingMsg.remove();
-                addMessage('ai', '❌ Gagal terhubung ke server AI di Termux. Pastikan server berjalan dan URL ngrok benar.');
                 console.error('Error:', error);
+                
+                if (error.name === 'TimeoutError') {
+                    addMessage('ai', '⏰ Server tidak merespon (timeout). Coba lagi nanti.');
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    addMessage('ai', '❌ Gagal terhubung ke server. Server mungkin offline.');
+                    // Auto cek koneksi
+                    checkConnection();
+                } else {
+                    addMessage('ai', '❌ Error: ' + error.message);
+                }
             } finally {
-                sendBtn.disabled = false;
-                promptInput.disabled = false;
+                isProcessing = false;
+                if (isOnline) {
+                    promptInput.disabled = false;
+                    sendBtn.disabled = false;
+                }
                 promptInput.focus();
             }
         }
         
+        // ============ RELOAD KNOWLEDGE ============
         async function reloadKnowledge() {
+            if (!isOnline) {
+                addMessage('ai', '❌ Server offline. Tidak bisa reload knowledge.');
+                return;
+            }
+            
+            const loadingMsg = addMessage('loading', 'Reloading knowledge...');
             try {
                 const response = await fetch(`${API_URL}/reload`, { method: 'POST' });
                 const data = await response.json();
+                loadingMsg.remove();
                 addMessage('ai', `✅ Knowledge base reloaded! Total entries: ${data.total_entries}`);
-            } catch (e) {
+            } catch (error) {
+                loadingMsg.remove();
                 addMessage('ai', '❌ Gagal reload knowledge base.');
             }
-            return false;
         }
         
-        async function checkConnection() {
-            try {
-                const response = await fetch(`${API_URL}/status`);
-                if (response.ok) {
-                    document.getElementById('statusText').textContent = 'Online';
-                    document.querySelector('.status').style.background = '#065f46';
-                    document.querySelector('.status').style.color = '#34d399';
-                }
-            } catch (e) {
-                document.getElementById('statusText').textContent = 'Offline';
-                document.querySelector('.status').style.background = '#7f1d1d';
-                document.querySelector('.status').style.color = '#fca5a5';
-            }
-        }
-        
-        checkConnection();
+        // ============ AUTO CHECK ============
+        // Cek koneksi setiap 30 detik
         setInterval(checkConnection, 30000);
+        
+        // Cek pertama kali
+        setTimeout(checkConnection, 1000);
     </script>
 </body>
 </html>
