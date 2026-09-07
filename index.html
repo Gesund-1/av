@@ -7,268 +7,52 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        
-        /* ===== FULL SCREEN LOADING ===== */
-        #loadingScreen {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #0f172a;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease;
-        }
-        #loadingScreen.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        .loader {
-            width: 60px;
-            height: 60px;
-            border: 4px solid #1e293b;
-            border-top: 4px solid #60a5fa;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #loadingScreen p {
-            margin-top: 20px;
-            color: #94a3b8;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-        }
-        .loading-dots {
-            display: inline-flex;
-            gap: 4px;
-            margin-left: 8px;
-        }
-        .loading-dots span {
-            width: 6px;
-            height: 6px;
-            background: #60a5fa;
-            border-radius: 50%;
-            animation: bounce 1.4s infinite both;
-        }
-        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
-        
-        /* ===== MAIN CONTAINER ===== */
-        .container {
-            width: 100%;
-            max-width: 900px;
-            background: #1e293b;
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            display: none;
-        }
-        .container.show { display: block; }
-        
-        /* ===== MAINTENANCE PAGE (Full) ===== */
-        #maintenancePage {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #0f172a;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9998;
-            padding: 30px;
-            text-align: center;
-        }
-        #maintenancePage.show { display: flex; }
-        #maintenancePage .icon { font-size: 80px; margin-bottom: 24px; }
-        #maintenancePage h1 { 
-            font-size: 2rem; 
-            color: #fca5a5; 
-            margin-bottom: 12px;
-        }
-        #maintenancePage p { 
-            color: #94a3b8; 
-            font-size: 1rem; 
-            max-width: 500px; 
-            line-height: 1.8;
-            margin-bottom: 8px;
-        }
-        #maintenancePage .detail {
-            font-size: 0.85rem;
-            color: #64748b;
-            margin-top: 4px;
-        }
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .retry-btn {
-            padding: 14px 40px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background 0.3s, transform 0.2s;
-        }
-        .retry-btn:hover { background: #2563eb; transform: scale(1.02); }
-        .retry-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .retry-btn.danger { background: #dc2626; }
-        .retry-btn.danger:hover { background: #b91c1c; }
-        .retry-btn .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #fff;
-            border-top: 2px solid transparent;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-        
-        /* ===== HEADER ===== */
+        .container { width: 100%; max-width: 900px; background: #1e293b; border-radius: 16px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         h1 { font-size: 1.8rem; background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .status { 
-            padding: 6px 14px; 
-            border-radius: 20px; 
-            font-size: 0.75rem; 
-            font-weight: 600; 
-            display: flex; 
-            align-items: center; 
-            gap: 6px;
-            transition: all 0.3s ease;
-        }
+        .status { padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
         .status.online { background: #065f46; color: #34d399; }
         .status.offline { background: #7f1d1d; color: #fca5a5; }
-        .status.checking { background: #1e3a5f; color: #60a5fa; }
         .status .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
         .status.online .dot { background: #34d399; }
         .status.offline .dot { background: #fca5a5; animation: blink 1s infinite; }
-        .status.checking .dot { background: #60a5fa; animation: pulse 1s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        
-        /* ===== CHAT ===== */
-        .chat-area { 
-            background: #0f172a; 
-            border-radius: 12px; 
-            padding: 20px; 
-            height: 450px; 
-            overflow-y: auto; 
-            margin-bottom: 15px; 
-            border: 1px solid #334155;
-        }
+        .chat-area { background: #0f172a; border-radius: 12px; padding: 20px; height: 450px; overflow-y: auto; margin-bottom: 15px; border: 1px solid #334155; }
         .message { margin-bottom: 12px; display: flex; }
         .message.user { justify-content: flex-end; }
         .message.ai { justify-content: flex-start; }
-        .message .bubble { 
-            max-width: 80%; 
-            padding: 10px 16px; 
-            border-radius: 12px; 
-            font-size: 0.9rem; 
-            line-height: 1.6; 
-            white-space: pre-wrap; 
-            word-wrap: break-word; 
-        }
+        .message .bubble { max-width: 80%; padding: 10px 16px; border-radius: 12px; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word; }
         .message.user .bubble { background: #3b82f6; color: white; border-bottom-right-radius: 4px; }
         .message.ai .bubble { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-bottom-left-radius: 4px; }
         .message.loading .bubble { background: #1e293b; border: 1px solid #334155; color: #94a3b8; }
-        .loading-dots-chat { display: inline-flex; gap: 4px; align-items: center; margin-right: 8px; }
-        .loading-dots-chat span { width: 8px; height: 8px; background: #60a5fa; border-radius: 50%; animation: bounce 1.4s infinite both; }
-        .loading-dots-chat span:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dots-chat span:nth-child(2) { animation-delay: -0.16s; }
-        
-        /* ===== INPUT ===== */
+        .loading-dots { display: inline-flex; gap: 4px; align-items: center; margin-right: 8px; }
+        .loading-dots span { width: 8px; height: 8px; background: #60a5fa; border-radius: 50%; animation: bounce 1.4s infinite both; }
+        .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         .input-area { display: flex; gap: 10px; }
-        .input-area input { 
-            flex: 1; 
-            padding: 12px 16px; 
-            border-radius: 10px; 
-            border: 1px solid #334155; 
-            background: #0f172a; 
-            color: #e2e8f0; 
-            font-size: 0.95rem; 
-            outline: none; 
-            transition: border-color 0.3s;
-        }
+        .input-area input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 0.95rem; outline: none; }
         .input-area input:focus { border-color: #3b82f6; }
         .input-area input:disabled { opacity: 0.5; cursor: not-allowed; }
-        .input-area button { 
-            padding: 12px 28px; 
-            background: #3b82f6; 
-            color: white; 
-            border: none; 
-            border-radius: 10px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: background 0.3s;
-        }
+        .input-area button { padding: 12px 28px; background: #3b82f6; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.3s; }
         .input-area button:hover { background: #2563eb; }
         .input-area button:disabled { opacity: 0.5; cursor: not-allowed; }
-        
         .footer { margin-top: 20px; text-align: center; font-size: 0.8rem; color: #64748b; }
         .footer a { color: #60a5fa; text-decoration: none; cursor: pointer; }
         .footer a:hover { text-decoration: underline; }
-        
         @media (max-width: 600px) { .input-area { flex-direction: column; } .input-area button { width: 100%; } }
     </style>
 </head>
 <body>
-
-    <!-- ===== FULL SCREEN LOADING ===== -->
-    <div id="loadingScreen">
-        <div class="loader"></div>
-        <p>
-            Menghubungkan ke AI Server
-            <span class="loading-dots">
-                <span></span><span></span><span></span>
-            </span>
-        </p>
-        <p style="font-size: 0.75rem; color: #64748b; margin-top: 8px;">
-            Memeriksa koneksi ke Termux...
-        </p>
-    </div>
-
-    <!-- ===== FULL PAGE MAINTENANCE / OFFLINE ===== -->
-    <div id="maintenancePage">
-        <div class="icon">🔧</div>
-        <h1>Server Offline</h1>
-        <p>AI Server tidak dapat dihubungi.</p>
-        <p class="detail">Pastikan Termux berjalan dan tunnel aktif.</p>
-        <div class="btn-group">
-            <button class="retry-btn" id="retryBtn" onclick="checkConnection()">
-                🔄 Coba Hubungkan
-            </button>
-            <button class="retry-btn danger" onclick="forceReset()">
-                🔓 Reset & Coba Ulang
-            </button>
-        </div>
-        <p style="margin-top: 20px; font-size: 0.75rem; color: #64748b;">
-            Terakhir cek: <span id="lastCheckTime">-</span>
-        </p>
-    </div>
-
-    <!-- ===== MAIN CHAT ===== -->
-    <div class="container" id="mainContainer">
+    <div class="container">
         <div class="header">
             <h1>🤖 AI RAG</h1>
-            <div class="status checking" id="statusBadge">
+            <div class="status offline" id="statusBadge">
                 <span class="dot"></span>
-                <span id="statusText">Mengecek...</span>
+                <span id="statusText">Offline</span>
             </div>
         </div>
-        
+
         <div class="chat-area" id="chatArea">
             <div id="chatMessages">
                 <div style="text-align: center; color: #64748b; padding: 40px 20px;">
@@ -278,172 +62,79 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="input-area">
             <input type="text" id="promptInput" placeholder="Ketik pertanyaan..." onkeypress="if(event.key === 'Enter') sendMessage()" disabled>
             <button id="sendBtn" onclick="sendMessage()" disabled>Kirim</button>
         </div>
-        
+
         <div class="footer">
-            🧠 AI berjalan di Termux | 
-            <a onclick="reloadKnowledge()">Reload Knowledge</a> | 
+            🧠 AI berjalan di Termux |
+            <a onclick="reloadKnowledge()">Reload Knowledge</a> |
             <a onclick="checkConnection()">🔄 Cek Status</a>
         </div>
     </div>
 
     <script>
-        // ============ KONFIGURASI ============
         const API_URL = 'https://av.serveo.net';  // Ganti dengan URL serveo kamu
-        
-        // ============ ELEMEN ============
-        const loadingScreen = document.getElementById('loadingScreen');
-        const mainContainer = document.getElementById('mainContainer');
-        const maintenancePage = document.getElementById('maintenancePage');
+
         const chatMessages = document.getElementById('chatMessages');
         const promptInput = document.getElementById('promptInput');
         const sendBtn = document.getElementById('sendBtn');
         const statusBadge = document.getElementById('statusBadge');
         const statusText = document.getElementById('statusText');
-        const retryBtn = document.getElementById('retryBtn');
-        const lastCheckTime = document.getElementById('lastCheckTime');
-        
+
         let isOnline = false;
         let isProcessing = false;
-        let isFirstCheck = true;
-        let checkInterval = null;
-        
-        // ============ FORCE RESET (UNLOCK) ============
-        function forceReset() {
-            // Clear semua state
-            localStorage.clear();
-            sessionStorage.clear();
-            
-            // Reset UI
-            maintenancePage.classList.remove('show');
-            loadingScreen.classList.remove('hidden');
-            loadingScreen.style.display = 'flex';
-            
-            // Reset status
-            isOnline = false;
-            isFirstCheck = true;
-            
-            // Hapus interval lama
-            if (checkInterval) {
-                clearInterval(checkInterval);
-                checkInterval = null;
-            }
-            
-            // Reload halaman dari server (force)
-            location.reload(true);
-        }
-        
-        // ============ STATUS MANAGEMENT ============
-        function updateStatus(status, message) {
-            statusBadge.className = 'status ' + status;
-            statusText.textContent = message;
-            
-            if (status === 'offline') {
-                maintenancePage.classList.add('show');
-                mainContainer.classList.remove('show');
-                promptInput.disabled = true;
-                sendBtn.disabled = true;
-                isOnline = false;
-            } else if (status === 'online') {
-                maintenancePage.classList.remove('show');
-                mainContainer.classList.add('show');
+
+        function updateStatus(online) {
+            isOnline = online;
+            if (online) {
+                statusBadge.className = 'status online';
+                statusText.textContent = 'Online';
                 if (!isProcessing) {
                     promptInput.disabled = false;
                     sendBtn.disabled = false;
                 }
-                isOnline = true;
-            } else if (status === 'checking') {
-                // Tetap di loading/maintenance
+            } else {
+                statusBadge.className = 'status offline';
+                statusText.textContent = 'Offline';
+                promptInput.disabled = true;
+                sendBtn.disabled = true;
             }
         }
-        
-        // ============ CEK KONEKSI ============
+
         async function checkConnection() {
-            // Tampilkan loading di tombol retry
-            if (retryBtn) {
-                retryBtn.disabled = true;
-                retryBtn.innerHTML = '<span class="spinner"></span> Menghubungkan...';
-            }
-            
-            // Jika masih di loading screen, update teks
-            if (isFirstCheck) {
-                document.querySelector('#loadingScreen p:last-child').textContent = '⏳ Menghubungkan ke server...';
-            }
-            
-            updateStatus('checking', 'Mengecek...');
-            
             try {
-                const startTime = Date.now();
                 const response = await fetch(`${API_URL}/status`, {
-                    signal: AbortSignal.timeout(8000)
+                    signal: AbortSignal.timeout(5000)
                 });
-                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-                
                 if (response.ok) {
-                    isOnline = true;
-                    updateStatus('online', 'Online (' + elapsed + 's)');
-                    lastCheckTime.textContent = new Date().toLocaleTimeString();
-                    
-                    // Sembunyikan loading screen
-                    loadingScreen.classList.add('hidden');
-                    setTimeout(() => {
-                        loadingScreen.style.display = 'none';
-                    }, 500);
-                    
-                    // Enable input
-                    if (!isProcessing) {
-                        promptInput.disabled = false;
-                        sendBtn.disabled = false;
-                    }
-                    
-                    // Setup auto-check setiap 30 detik
-                    if (!checkInterval) {
-                        checkInterval = setInterval(checkConnection, 30000);
-                    }
+                    updateStatus(true);
                 } else {
-                    throw new Error('Response not OK');
+                    updateStatus(false);
                 }
             } catch (error) {
                 console.error('Connection check failed:', error);
-                isOnline = false;
-                updateStatus('offline', 'Offline');
-                lastCheckTime.textContent = new Date().toLocaleTimeString();
-                
-                // Loading screen hilang, muncul maintenance
-                loadingScreen.classList.add('hidden');
-                setTimeout(() => {
-                    loadingScreen.style.display = 'none';
-                    maintenancePage.classList.add('show');
-                }, 500);
-            } finally {
-                if (retryBtn) {
-                    retryBtn.disabled = false;
-                    retryBtn.innerHTML = '🔄 Coba Hubungkan';
-                }
-                isFirstCheck = false;
+                updateStatus(false);
             }
         }
-        
-        // ============ TAMBAH PESAN ============
+
         function addMessage(type, content) {
             const placeholder = chatMessages.querySelector('div[style]');
             if (placeholder && placeholder.style.textAlign === 'center') {
                 placeholder.remove();
             }
-            
+
             const wrapper = document.createElement('div');
             wrapper.className = `message ${type}`;
-            
+
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
-            
+
             if (type === 'loading') {
                 bubble.innerHTML = `
-                    <div class="loading-dots-chat">
+                    <div class="loading-dots">
                         <span></span><span></span><span></span>
                     </div>
                     ${content}
@@ -451,34 +142,33 @@
             } else {
                 bubble.textContent = content;
             }
-            
+
             wrapper.appendChild(bubble);
             chatMessages.appendChild(wrapper);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             return wrapper;
         }
-        
+
         function removeLoading() {
             const loading = chatMessages.querySelector('.message.loading');
             if (loading) loading.remove();
         }
-        
-        // ============ SEND MESSAGE ============
+
         async function sendMessage() {
             if (isProcessing || !isOnline) return;
-            
+
             const prompt = promptInput.value.trim();
             if (!prompt) return;
-            
+
             addMessage('user', prompt);
             promptInput.value = '';
-            
+
             isProcessing = true;
             promptInput.disabled = true;
             sendBtn.disabled = true;
-            
+
             const loadingMsg = addMessage('loading', 'Memproses...');
-            
+
             try {
                 const response = await fetch(`${API_URL}/chat`, {
                     method: 'POST',
@@ -486,32 +176,28 @@
                     body: JSON.stringify({ prompt: prompt }),
                     signal: AbortSignal.timeout(30000)
                 });
-                
+
                 loadingMsg.remove();
-                
-                if (!response.ok) {
-                    throw new Error('HTTP ' + response.status);
-                }
-                
+
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+
                 const data = await response.json();
-                
+
                 if (data.status === 'error') {
                     addMessage('ai', '❌ ' + data.message);
                 } else {
                     addMessage('ai', data.answer);
                 }
-                
+
             } catch (error) {
                 loadingMsg.remove();
                 console.error('Error:', error);
-                
+
                 if (error.name === 'TimeoutError') {
                     addMessage('ai', '⏰ Server tidak merespon (timeout). Coba lagi.');
-                } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                    addMessage('ai', '❌ Server offline. Periksa koneksi Termux.');
-                    checkConnection();
                 } else {
-                    addMessage('ai', '❌ Error: ' + error.message);
+                    addMessage('ai', '❌ Gagal terhubung ke server. Cek koneksi Termux.');
+                    checkConnection();
                 }
             } finally {
                 isProcessing = false;
@@ -522,14 +208,13 @@
                 promptInput.focus();
             }
         }
-        
-        // ============ RELOAD KNOWLEDGE ============
+
         async function reloadKnowledge() {
             if (!isOnline) {
                 addMessage('ai', '❌ Server offline. Tidak bisa reload.');
                 return;
             }
-            
+
             const loadingMsg = addMessage('loading', 'Reloading...');
             try {
                 const response = await fetch(`${API_URL}/reload`, { method: 'POST' });
@@ -541,10 +226,10 @@
                 addMessage('ai', '❌ Gagal reload knowledge.');
             }
         }
-        
-        // ============ START ============
-        // Cek koneksi saat load
+
+        // Start
         setTimeout(checkConnection, 500);
+        setInterval(checkConnection, 30000);
     </script>
 </body>
 </html>
