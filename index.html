@@ -1,1 +1,360 @@
 
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Portal Berita Termux</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-hover: #334155;
+    --accent: #38bdf8;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #334155;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  }
+
+  header h1 {
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  header p {
+    margin-top: .5rem;
+    opacity: .9;
+    font-size: .95rem;
+  }
+
+  .status {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: .3rem .9rem;
+    border-radius: 999px;
+    background: rgba(0,0,0,.25);
+    font-size: .8rem;
+    font-weight: 600;
+  }
+
+  .status.online::before { content: "🟢 "; }
+  .status.offline::before { content: "🔴 "; }
+  .status.loading::before { content: "🟡 "; }
+
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+  }
+
+  .toolbar {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    align-items: center;
+  }
+
+  .toolbar input, .toolbar select {
+    padding: .65rem .9rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: .9rem;
+    outline: none;
+  }
+
+  .toolbar input { flex: 1; min-width: 200px; }
+
+  .toolbar input:focus, .toolbar select:focus { border-color: var(--accent); }
+
+  .toolbar button {
+    padding: .65rem 1.2rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #0f172a;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .15s, filter .15s;
+  }
+
+  .toolbar button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+  #news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border-radius: 14px;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text);
+    border: 1px solid var(--border);
+    transition: transform .2s, background .2s, box-shadow .2s;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    background: var(--card-hover);
+    box-shadow: 0 8px 24px rgba(56,189,248,.25);
+  }
+
+  .card img {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    display: block;
+    background: #0f172a;
+  }
+
+  .card-body {
+    padding: 1rem 1.1rem 1.2rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #0f172a;
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .2rem .6rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    align-self: flex-start;
+  }
+
+  .card h3 {
+    margin: .6rem 0 .4rem;
+    font-size: 1.05rem;
+    line-height: 1.35;
+  }
+
+  .card .meta {
+    font-size: .78rem;
+    color: var(--muted);
+    margin-top: auto;
+    padding-top: .8rem;
+  }
+
+  .empty, .error {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+    grid-column: 1 / -1;
+  }
+
+  .error h3 { color: #f87171; margin-bottom: .5rem; }
+
+  .error code {
+    background: var(--card);
+    padding: .1rem .4rem;
+    border-radius: 4px;
+    font-size: .85em;
+  }
+
+  .spinner {
+    width: 40px; height: 40px;
+    border: 4px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--muted);
+    font-size: .85rem;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📰 Portal Berita Termux</h1>
+  <p>Disajikan langsung dari server ponsel via Serveo Tunnel</p>
+  <div class="status loading" id="status">Menghubungkan...</div>
+</header>
+
+<main>
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="🔍 Cari berita..." />
+    <select id="kategori">
+      <option value="">Semua Kategori</option>
+    </select>
+    <button id="refresh">↻ Refresh</button>
+  </div>
+
+  <div id="news-grid">
+    <div class="empty">
+      <div class="spinner"></div>
+      Memuat berita...
+    </div>
+  </div>
+</main>
+
+<footer>
+  &copy; 2026 Portal Berita Termux — Powered by Flask + Serveo + Vercel
+</footer>
+
+<script>
+// ============================================
+// ⚙️ GANTI URL INI DENGAN SUBDOMAIN SERVEO ANDA
+// ============================================
+const API_BASE = "https://news.serveousercontent.com";
+
+// ===== STATE =====
+let semuaBerita = [];
+
+// ===== ELEMEN =====
+const grid = document.getElementById('news-grid');
+const statusEl = document.getElementById('status');
+const searchInput = document.getElementById('search');
+const kategoriSelect = document.getElementById('kategori');
+const refreshBtn = document.getElementById('refresh');
+
+// ===== UTIL =====
+function setStatus(text, type) {
+  statusEl.textContent = text;
+  statusEl.className = 'status ' + type;
+}
+
+function formatTanggal(str) {
+  try {
+    const d = new Date(str);
+    if (isNaN(d)) return str;
+    return d.toLocaleDateString('id-ID', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
+  } catch { return str; }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+// ===== FETCH DAFTAR BERITA =====
+async function ambilBerita() {
+  setStatus('Menghubungkan ke server Termux...', 'loading');
+  grid.innerHTML = `<div class="empty"><div class="spinner"></div>Memuat berita...</div>`;
+
+  try {
+    const res = await fetch(API_BASE + "/api/berita", { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const json = await res.json();
+
+    if (!json.sukses || !Array.isArray(json.data)) {
+      throw new Error("Format respons tidak valid");
+    }
+
+    semuaBerita = json.data;
+    setStatus(`Online — ${semuaBerita.length} berita`, 'online');
+    isiKategori();
+    renderBerita(semuaBerita);
+  } catch (err) {
+    console.error(err);
+    setStatus('Server Termux offline', 'offline');
+    grid.innerHTML = `
+      <div class="error">
+        <h3>⚠️ Gagal memuat berita</h3>
+        <p>${escapeHtml(err.message)}</p>
+        <p style="margin-top:.5rem;font-size:.85rem">
+          Pastikan <code>api.py</code> dan tunnel Serveo masih berjalan di Termux.
+        </p>
+      </div>`;
+  }
+}
+
+// ===== DROPDOWN KATEGORI =====
+function isiKategori() {
+  const unik = [...new Set(semuaBerita.map(b => b.kategori).filter(Boolean))];
+  kategoriSelect.innerHTML = '<option value="">Semua Kategori</option>' +
+    unik.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
+}
+
+// ===== RENDER KARTU (buka di tab baru) =====
+function renderBerita(list) {
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty">Tidak ada berita yang cocok.</div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(b => {
+    const gambar = b.gambar || `https://picsum.photos/seed/berita${b.id}/600/300`;
+    return `
+      <a class="card"
+         href="${API_BASE}/web/berita/${b.id}"
+         target="_blank"
+         rel="noopener noreferrer">
+        <img src="${escapeHtml(gambar)}"
+             alt="${escapeHtml(b.judul)}"
+             loading="lazy"
+             onerror="this.src='https://via.placeholder.com/600x300?text=No+Image'">
+        <div class="card-body">
+          <span class="badge">${escapeHtml(b.kategori || 'Umum')}</span>
+          <h3>${escapeHtml(b.judul)}</h3>
+          <div class="meta">✍️ ${escapeHtml(b.penulis || 'Anonim')} • ${formatTanggal(b.tanggal)}</div>
+        </div>
+      </a>`;
+  }).join('');
+}
+
+// ===== FILTER =====
+function terapkanFilter() {
+  const q = searchInput.value.toLowerCase().trim();
+  const kat = kategoriSelect.value;
+  const hasil = semuaBerita.filter(b => {
+    const cocokQ = !q
+      || (b.judul || '').toLowerCase().includes(q)
+      || (b.konten || '').toLowerCase().includes(q);
+    const cocokKat = !kat || b.kategori === kat;
+    return cocokQ && cocokKat;
+  });
+  renderBerita(hasil);
+}
+
+searchInput.addEventListener('input', terapkanFilter);
+kategoriSelect.addEventListener('change', terapkanFilter);
+refreshBtn.addEventListener('click', ambilBerita);
+
+// ===== JALANKAN =====
+ambilBerita();
+</script>
+
+</body>
+  </html>
