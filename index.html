@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Portal Berita Termux</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -23,6 +24,7 @@
     color: var(--text);
     line-height: 1.6;
     min-height: 100vh;
+    padding-bottom: 80px;
   }
 
   header {
@@ -33,6 +35,7 @@
   }
 
   header h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; }
+  header h1 i { margin-right: .4rem; }
   header p { margin-top: .5rem; opacity: .9; font-size: .95rem; }
 
   .status {
@@ -45,9 +48,9 @@
     font-weight: 600;
   }
 
-  .status.online::before { content: "🟢 "; }
-  .status.offline::before { content: "🔴 "; }
-  .status.loading::before { content: "🟡 "; }
+  .status.online::before { content: ""; }
+  .status.offline::before { content: ""; }
+  .status.loading::before { content: ""; }
 
   main {
     max-width: 1100px;
@@ -85,9 +88,11 @@
     font-weight: 700;
     cursor: pointer;
     transition: transform .15s, filter .15s;
+    font-family: inherit;
   }
 
   .toolbar button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+  .toolbar button i { margin-right: .3rem; }
 
   #news-grid {
     display: grid;
@@ -149,6 +154,7 @@
     margin-top: auto;
     padding-top: .8rem;
   }
+  .card .meta i { margin-right: .2rem; }
 
   .empty, .error {
     text-align: center;
@@ -158,6 +164,7 @@
   }
 
   .error h3 { color: #f87171; margin-bottom: .5rem; }
+  .error h3 i { margin-right: .4rem; }
 
   .error code {
     background: var(--card);
@@ -184,23 +191,54 @@
     font-size: .85rem;
     border-top: 1px solid var(--border);
   }
+
+  /* ===== FAB ===== */
+  .fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .75rem 1.1rem;
+    background: var(--accent);
+    color: #0f172a;
+    border: none;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: .85rem;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(56,189,248,.5);
+    z-index: 100;
+    transition: transform .15s, filter .15s, opacity .2s;
+    font-family: inherit;
+  }
+  .fab:hover { transform: translateY(-3px); filter: brightness(1.1); }
+  .fab:active { transform: translateY(-1px); }
+  .fab.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+  }
+  .fab .icon { font-size: 1rem; line-height: 1; }
+  .fab .text { white-space: nowrap; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>📰 Portal Berita Termux</h1>
+  <h1><i class="fa-solid fa-newspaper"></i> Portal Berita Termux</h1>
   <p>Disajikan langsung dari server ponsel via Serveo Tunnel</p>
   <div class="status loading" id="status">Menghubungkan...</div>
 </header>
 
 <main>
   <div class="toolbar">
-    <input type="text" id="search" placeholder="🔍 Cari berita..." />
+    <input type="text" id="search" placeholder="Cari berita..." />
     <select id="kategori">
       <option value="">Semua Kategori</option>
     </select>
-    <button id="refresh">↻ Refresh</button>
+    <button id="refresh"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
   </div>
 
   <div id="news-grid">
@@ -215,13 +253,17 @@
   &copy; 2026 Portal Berita Termux — Powered by Flask + Serveo + Vercel
 </footer>
 
+<button class="fab" id="fab-toggle" title="Tampilkan semua berita">
+  <span class="icon"><i class="fa-solid fa-chevron-down"></i></span>
+  <span class="text" id="fab-text">Lihat Semua</span>
+</button>
+
 <script>
 // ============================================
 // IMAGE HELPER (inline)
 // ============================================
 window.ImageHelper = {
   THUMB_HEIGHT: 170,
-
   buildThumbnail: function (berita, API_BASE) {
     let src = berita.gambar || "";
     if (!src) {
@@ -243,20 +285,26 @@ window.ImageHelper = {
 // ============================================
 const API_BASE = "https://news.serveousercontent.com";
 
-// ===== STATE =====
-let semuaBerita = [];
+const BATAS_AWAL = 5;
 
-// ===== ELEMEN =====
+let semuaBerita = [];
+let tampilSemua = false;
+
 const grid = document.getElementById('news-grid');
 const statusEl = document.getElementById('status');
 const searchInput = document.getElementById('search');
 const kategoriSelect = document.getElementById('kategori');
 const refreshBtn = document.getElementById('refresh');
+const fabToggle = document.getElementById('fab-toggle');
+const fabText = document.getElementById('fab-text');
 
-// ===== UTIL =====
 function setStatus(text, type) {
-  statusEl.textContent = text;
   statusEl.className = 'status ' + type;
+  let icon = '';
+  if (type === 'online') icon = '<i class="fa-solid fa-circle" style="color:#22c55e;margin-right:.3rem"></i>';
+  else if (type === 'offline') icon = '<i class="fa-solid fa-circle" style="color:#ef4444;margin-right:.3rem"></i>';
+  else icon = '<i class="fa-solid fa-circle" style="color:#f59e0b;margin-right:.3rem"></i>';
+  statusEl.innerHTML = icon + text;
 }
 
 function formatTanggal(str) {
@@ -275,7 +323,6 @@ function escapeHtml(s) {
   }[c]));
 }
 
-// ===== FETCH =====
 async function ambilBerita() {
   setStatus('Menghubungkan ke server Termux...', 'loading');
   grid.innerHTML = `<div class="empty"><div class="spinner"></div>Memuat berita...</div>`;
@@ -286,21 +333,23 @@ async function ambilBerita() {
     const json = await res.json();
     if (!json.sukses || !Array.isArray(json.data)) throw new Error("Format respons tidak valid");
 
-    semuaBerita = json.data;
+    semuaBerita = json.data.slice().sort((a, b) => (b.id || 0) - (a.id || 0));
+
     setStatus(`Online — ${semuaBerita.length} berita`, 'online');
     isiKategori();
-    renderBerita(semuaBerita);
+    renderBerita();
   } catch (err) {
     console.error(err);
     setStatus('Server Termux offline', 'offline');
     grid.innerHTML = `
       <div class="error">
-        <h3>⚠️ Gagal memuat berita</h3>
+        <h3><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat berita</h3>
         <p>${escapeHtml(err.message)}</p>
         <p style="margin-top:.5rem;font-size:.85rem">
           Pastikan <code>api.py</code> dan tunnel Serveo masih berjalan.
         </p>
       </div>`;
+    fabToggle.classList.add('hidden');
   }
 }
 
@@ -310,16 +359,29 @@ function isiKategori() {
     unik.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
 }
 
-// ===== RENDER KARTU — buka tab baru, tanpa rel="noopener" =====
-function renderBerita(list) {
+function dapatkanFiltered() {
+  const q = searchInput.value.toLowerCase().trim();
+  const kat = kategoriSelect.value;
+  return semuaBerita.filter(b => {
+    const cocokQ = !q || (b.judul || '').toLowerCase().includes(q);
+    const cocokKat = !kat || b.kategori === kat;
+    return cocokQ && cocokKat;
+  });
+}
+
+function renderBerita() {
+  const list = dapatkanFiltered();
+
   if (!list.length) {
     grid.innerHTML = `<div class="empty">Tidak ada berita yang cocok.</div>`;
+    fabToggle.classList.add('hidden');
     return;
   }
 
+  const tampil = tampilSemua ? list : list.slice(0, BATAS_AWAL);
   const asalUrl = encodeURIComponent(window.location.origin);
 
-  grid.innerHTML = list.map(b => {
+  grid.innerHTML = tampil.map(b => {
     const gambar = ImageHelper.buildThumbnail(b, API_BASE);
     return `
       <a class="card"
@@ -329,30 +391,59 @@ function renderBerita(list) {
         <div class="card-body">
           <span class="badge">${escapeHtml(b.kategori || 'Umum')}</span>
           <h3>${escapeHtml(b.judul)}</h3>
-          <div class="meta">✍️ ${escapeHtml(b.penulis || 'Anonim')} • ${formatTanggal(b.tanggal)}</div>
+          <div class="meta"><i class="fa-solid fa-pen-nib"></i> ${escapeHtml(b.penulis || 'Anonim')} • ${formatTanggal(b.tanggal)}</div>
         </div>
       </a>`;
   }).join('');
+
+  updateFab(list.length);
 }
 
-// ===== FILTER =====
-function terapkanFilter() {
-  const q = searchInput.value.toLowerCase().trim();
-  const kat = kategoriSelect.value;
-  const hasil = semuaBerita.filter(b => {
-    const cocokQ = !q
-      || (b.judul || '').toLowerCase().includes(q);
-    const cocokKat = !kat || b.kategori === kat;
-    return cocokQ && cocokKat;
-  });
-  renderBerita(hasil);
+function updateFab(total) {
+  if (total <= BATAS_AWAL) {
+    fabToggle.classList.add('hidden');
+    return;
+  }
+  fabToggle.classList.remove('hidden');
+
+  if (tampilSemua) {
+    fabToggle.querySelector('.icon').innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
+    fabText.textContent = 'Ringkas (5)';
+  } else {
+    fabToggle.querySelector('.icon').innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
+    fabText.textContent = `Lihat Semua (${total})`;
+  }
 }
 
-searchInput.addEventListener('input', terapkanFilter);
-kategoriSelect.addEventListener('change', terapkanFilter);
-refreshBtn.addEventListener('click', ambilBerita);
+fabToggle.addEventListener('click', function () {
+  tampilSemua = !tampilSemua;
+  renderBerita();
 
-// ===== JALANKAN =====
+  if (tampilSemua) {
+    setTimeout(function () {
+      const cards = document.querySelectorAll('.card');
+      if (cards.length > BATAS_AWAL) {
+        cards[BATAS_AWAL].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+});
+
+searchInput.addEventListener('input', function () {
+  tampilSemua = false;
+  renderBerita();
+});
+kategoriSelect.addEventListener('change', function () {
+  tampilSemua = false;
+  renderBerita();
+});
+refreshBtn.addEventListener('click', function () {
+  tampilSemua = false;
+  ambilBerita();
+});
+
 ambilBerita();
 </script>
 
