@@ -72,4 +72,167 @@
     padding: 1rem 1.1rem 1.2rem; flex: 1;
     display: flex; flex-direction: column;
   }
-  .badge
+  .badge {
+    display: inline-block; background: var(--accent); color: #0f172a;
+    font-size: .7rem; font-weight: 700; padding: .2rem .6rem;
+    border-radius: 999px; text-transform: uppercase;
+    letter-spacing: .5px; align-self: flex-start;
+  }
+  .card h3 { margin: .6rem 0 .4rem; font-size: 1.05rem; line-height: 1.35; }
+  .card .meta { font-size: .78rem; color: var(--muted); margin-top: auto; padding-top: .8rem; }
+  .empty, .error {
+    text-align: center; padding: 3rem 1rem;
+    color: var(--muted); grid-column: 1 / -1;
+  }
+  .error h3 { color: #f87171; margin-bottom: .5rem; }
+  .error code { background: var(--card); padding: .1rem .4rem; border-radius: 4px; font-size: .85em; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 4px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  footer {
+    text-align: center; padding: 1.5rem;
+    color: var(--muted); font-size: .85rem;
+    border-top: 1px solid var(--border);
+  }
+</style>
+<script src="image.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>📰 Portal Berita Termux</h1>
+  <p>Disajikan langsung dari server ponsel via Serveo Tunnel</p>
+  <div class="status loading" id="status">Menghubungkan...</div>
+</header>
+
+<main>
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="🔍 Cari berita..." />
+    <select id="kategori">
+      <option value="">Semua Kategori</option>
+    </select>
+    <button id="refresh">↻ Refresh</button>
+  </div>
+
+  <div id="news-grid">
+    <div class="empty">
+      <div class="spinner"></div>
+      Memuat berita...
+    </div>
+  </div>
+</main>
+
+<footer>
+  &copy; 2026 Portal Berita Termux — Powered by Flask + Serveo + Vercel
+</footer>
+
+<script>
+// ⚙️ GANTI DENGAN SUBDOMAIN SERVEO ANDA
+const API_BASE = "https://news.serveousercontent.com";
+
+let semuaBerita = [];
+const grid = document.getElementById('news-grid');
+const statusEl = document.getElementById('status');
+const searchInput = document.getElementById('search');
+const kategoriSelect = document.getElementById('kategori');
+const refreshBtn = document.getElementById('refresh');
+
+function setStatus(text, type) {
+  statusEl.textContent = text;
+  statusEl.className = 'status ' + type;
+}
+function formatTanggal(str) {
+  try {
+    const d = new Date(str);
+    if (isNaN(d)) return str;
+    return d.toLocaleDateString('id-ID', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
+  } catch { return str; }
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+async function ambilBerita() {
+  setStatus('Menghubungkan ke server Termux...', 'loading');
+  grid.innerHTML = `<div class="empty"><div class="spinner"></div>Memuat berita...</div>`;
+  try {
+    const res = await fetch(API_BASE + "/api/berita", { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const json = await res.json();
+    if (!json.sukses || !Array.isArray(json.data)) throw new Error("Format respons tidak valid");
+    semuaBerita = json.data;
+    setStatus(`Online — ${semuaBerita.length} berita`, 'online');
+    isiKategori();
+    renderBerita(semuaBerita);
+  } catch (err) {
+    console.error(err);
+    setStatus('Server Termux offline', 'offline');
+    grid.innerHTML = `
+      <div class="error">
+        <h3>⚠️ Gagal memuat berita</h3>
+        <p>${escapeHtml(err.message)}</p>
+        <p style="margin-top:.5rem;font-size:.85rem">
+          Pastikan <code>api.py</code> dan tunnel Serveo masih berjalan.
+        </p>
+      </div>`;
+  }
+}
+
+function isiKategori() {
+  const unik = [...new Set(semuaBerita.map(b => b.kategori).filter(Boolean))];
+  kategoriSelect.innerHTML = '<option value="">Semua Kategori</option>' +
+    unik.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
+}
+
+function renderBerita(list) {
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty">Tidak ada berita yang cocok.</div>`;
+    return;
+  }
+  const asalUrl = encodeURIComponent(window.location.origin);
+  grid.innerHTML = list.map(b => {
+    const gambar = ImageHelper.buildThumbnail(b, API_BASE);
+    return `
+      <a class="card"
+         href="${API_BASE}/web/berita/${b.id}?from=${asalUrl}"
+         target="_blank"
+         rel="noopener noreferrer">
+        ${gambar}
+        <div class="card-body">
+          <span class="badge">${escapeHtml(b.kategori || 'Umum')}</span>
+          <h3>${escapeHtml(b.judul)}</h3>
+          <div class="meta">✍️ ${escapeHtml(b.penulis || 'Anonim')} • ${formatTanggal(b.tanggal)}</div>
+        </div>
+      </a>`;
+  }).join('');
+}
+
+function terapkanFilter() {
+  const q = searchInput.value.toLowerCase().trim();
+  const kat = kategoriSelect.value;
+  const hasil = semuaBerita.filter(b => {
+    const cocokQ = !q
+      || (b.judul || '').toLowerCase().includes(q);
+    const cocokKat = !kat || b.kategori === kat;
+    return cocokQ && cocokKat;
+  });
+  renderBerita(hasil);
+}
+
+searchInput.addEventListener('input', terapkanFilter);
+kategoriSelect.addEventListener('change', terapkanFilter);
+refreshBtn.addEventListener('click', ambilBerita);
+
+ambilBerita();
+</script>
+
+</body>
+</html>
