@@ -217,26 +217,20 @@
 
 <script>
 // ============================================
-// IMAGE HELPER (inline — biar tidak perlu file eksternal)
+// IMAGE HELPER (inline)
 // ============================================
 window.ImageHelper = {
   THUMB_HEIGHT: 170,
 
-  /**
-   * Bikin HTML <img> untuk kartu berita.
-   */
   buildThumbnail: function (berita, API_BASE) {
     let src = berita.gambar || "";
-
     if (!src) {
       src = "https://via.placeholder.com/600x300?text=No+Image";
     } else if (src.startsWith("/")) {
       src = API_BASE + src;
     }
-
     const tinggi = berita.gambar_tinggi || 170;
     const judulEscaped = String(berita.judul || "").replace(/"/g, "&quot;");
-
     return '<img src="' + src + '" alt="' + judulEscaped + '" loading="lazy" ' +
            'style="width:100%;height:' + tinggi + 'px;object-fit:cover;' +
            'display:block;background:#0f172a;" ' +
@@ -316,7 +310,7 @@ function isiKategori() {
     unik.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
 }
 
-// ===== RENDER KARTU =====
+// ===== RENDER KARTU — buka tab baru, tanpa rel="noopener" =====
 function renderBerita(list) {
   if (!list.length) {
     grid.innerHTML = `<div class="empty">Tidak ada berita yang cocok.</div>`;
@@ -330,8 +324,7 @@ function renderBerita(list) {
     return `
       <a class="card"
          href="${API_BASE}/web/berita/${b.id}?from=${asalUrl}"
-         target="_blank"
-         rel="noopener noreferrer">
+         target="_blank">
         ${gambar}
         <div class="card-body">
           <span class="badge">${escapeHtml(b.kategori || 'Umum')}</span>
