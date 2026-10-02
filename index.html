@@ -85,6 +85,28 @@
     transform: scale(1.05);
   }
 
+  /* ===== STATUS DOT (di navbar) ===== */
+  .status-dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.15);
+    cursor: default;
+    font-size: .8rem;
+  }
+  .status-dot.loading i { color: #fbbf24; animation: pulse 1s infinite; }
+  .status-dot.online  i { color: #22c55e; }
+  .status-dot.offline i { color: #ef4444; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+
+  /* ===== KATEGORI BAR ===== */
   .kategori-bar {
     display: flex;
     gap: .5rem;
@@ -135,66 +157,12 @@
   }
   .kategori-item i { font-size: .8rem; }
 
-  /* ===== HEADER LAMA (opsional, bisa dihapus) ===== */
-  header {
-    background: linear-gradient(135deg, #0ea5e9, #6366f1);
-    padding: 2rem 1.5rem;
-    text-align: center;
-  }
-  header h1 { font-size: 1.5rem; font-weight: 800; }
-  header h1 i { margin-right: .4rem; }
-  header p { margin-top: .3rem; opacity: .9; font-size: .85rem; }
-
-  .status {
-    display: inline-block;
-    margin-top: .8rem;
-    padding: .3rem .9rem;
-    border-radius: 999px;
-    background: rgba(0,0,0,.25);
-    font-size: .8rem;
-    font-weight: 600;
-  }
-
+  /* ===== MAIN ===== */
   main {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 2rem 1.25rem 4rem;
+    padding: 1.5rem 1.25rem 4rem;
   }
-
-  .toolbar {
-    display: flex;
-    gap: .75rem;
-    flex-wrap: wrap;
-    margin-bottom: 1.5rem;
-    align-items: center;
-  }
-
-  .toolbar input, .toolbar select {
-    padding: .65rem .9rem;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    color: var(--text);
-    font-size: .9rem;
-    outline: none;
-  }
-
-  .toolbar input { flex: 1; min-width: 200px; }
-  .toolbar input:focus, .toolbar select:focus { border-color: var(--accent); }
-
-  .toolbar button {
-    padding: .65rem 1.2rem;
-    border-radius: 8px;
-    border: none;
-    background: var(--accent);
-    color: #0f172a;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform .15s, filter .15s;
-    font-family: inherit;
-  }
-  .toolbar button:hover { transform: translateY(-2px); filter: brightness(1.1); }
-  .toolbar button i { margin-right: .3rem; }
 
   #news-grid {
     display: grid;
@@ -321,7 +289,8 @@
   @media (max-width: 600px) {
     .navbar { height: 52px; padding: 0 .75rem; }
     .navbar .nav-logo { font-size: .9rem; }
-    .navbar .nav-icon { width: 32px; height: 32px; font-size: .85rem; }
+    .navbar .nav-logo span { display: none; }
+    .navbar .nav-icon, .status-dot { width: 32px; height: 32px; font-size: .85rem; }
     .kategori-bar { padding: .5rem .75rem; }
     .kategori-item { font-size: .75rem; padding: .35rem .65rem; }
   }
@@ -329,17 +298,31 @@
 </head>
 <body>
 
-<!-- ===== NAVBAR + KATEGORI BAR ===== -->
+<!-- ===== NAVBAR ===== -->
 <div id="navbar-wrap">
   <nav class="navbar">
-    <a href="#" class="nav-logo" id="nav-logo-vercel" title="Beranda">
+    <a href="#" class="nav-logo" id="nav-logo-vercel" title="Portal Berita">
       <i class="fa-solid fa-newspaper"></i>
       <span>Portal Berita</span>
     </a>
+
     <div class="nav-actions">
+      <!-- Status dot -->
+      <div class="status-dot loading" id="status-dot" title="Menghubungkan...">
+        <i class="fa-solid fa-circle"></i>
+      </div>
+
+      <!-- Refresh -->
+      <button class="nav-icon" id="nav-refresh" title="Refresh">
+        <i class="fa-solid fa-rotate-right"></i>
+      </button>
+
+      <!-- List -->
       <a href="#news-grid" class="nav-icon" title="Daftar Berita">
         <i class="fa-solid fa-list"></i>
       </a>
+
+      <!-- Search -->
       <button class="nav-icon" id="nav-search-btn-vercel" title="Cari Berita">
         <i class="fa-solid fa-magnifying-glass"></i>
       </button>
@@ -353,19 +336,10 @@
   </div>
 </div>
 
-<header>
-  <h1><i class="fa-solid fa-newspaper"></i> Portal Berita Termux</h1>
-  <p>Disajikan langsung dari server ponsel via Serveo Tunnel</p>
-  <div class="status loading" id="status">Menghubungkan...</div>
-</header>
-
 <main>
-  <div class="toolbar">
+  <!-- Search bar tersembunyi — muncul kalau klik icon search -->
+  <div class="search-wrap" id="search-wrap" style="display:none; margin-bottom:1.5rem;">
     <input type="text" id="search" placeholder="Cari berita..." />
-    <select id="kategori">
-      <option value="">Semua Kategori</option>
-    </select>
-    <button id="refresh"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
   </div>
 
   <div id="news-grid">
@@ -426,22 +400,20 @@ const ICON_KATEGORI = {
 
 let semuaBerita = [];
 let tampilSemua = false;
+let kategoriAktif = "";
 
 const grid = document.getElementById('news-grid');
-const statusEl = document.getElementById('status');
+const statusDot = document.getElementById('status-dot');
 const searchInput = document.getElementById('search');
-const kategoriSelect = document.getElementById('kategori');
-const refreshBtn = document.getElementById('refresh');
+const searchWrap = document.getElementById('search-wrap');
+const kategoriSelect = null; // sudah tidak ada dropdown
+
 const fabToggle = document.getElementById('fab-toggle');
 const fabText = document.getElementById('fab-text');
 
 function setStatus(text, type) {
-  statusEl.className = 'status ' + type;
-  let icon = '';
-  if (type === 'online') icon = '<i class="fa-solid fa-circle" style="color:#22c55e;margin-right:.3rem"></i>';
-  else if (type === 'offline') icon = '<i class="fa-solid fa-circle" style="color:#ef4444;margin-right:.3rem"></i>';
-  else icon = '<i class="fa-solid fa-circle" style="color:#f59e0b;margin-right:.3rem"></i>';
-  statusEl.innerHTML = icon + text;
+  statusDot.className = 'status-dot ' + type;
+  statusDot.title = text;
 }
 
 function formatTanggal(str) {
@@ -461,7 +433,7 @@ function escapeHtml(s) {
 }
 
 async function ambilBerita() {
-  setStatus('Menghubungkan ke server Termux...', 'loading');
+  setStatus('Menghubungkan...', 'loading');
   grid.innerHTML = `<div class="empty"><div class="spinner"></div>Memuat berita...</div>`;
 
   try {
@@ -473,11 +445,10 @@ async function ambilBerita() {
     semuaBerita = json.data.slice().sort((a, b) => (b.id || 0) - (a.id || 0));
 
     setStatus(`Online — ${semuaBerita.length} berita`, 'online');
-    isiKategori();
     renderBerita();
   } catch (err) {
     console.error(err);
-    setStatus('Server Termux offline', 'offline');
+    setStatus('Server offline', 'offline');
     grid.innerHTML = `
       <div class="error">
         <h3><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat berita</h3>
@@ -490,18 +461,11 @@ async function ambilBerita() {
   }
 }
 
-function isiKategori() {
-  const unik = [...new Set(semuaBerita.map(b => b.kategori).filter(Boolean))];
-  kategoriSelect.innerHTML = '<option value="">Semua Kategori</option>' +
-    unik.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
-}
-
 function dapatkanFiltered() {
-  const q = searchInput.value.toLowerCase().trim();
-  const kat = kategoriSelect.value;
+  const q = searchInput ? searchInput.value.toLowerCase().trim() : "";
   return semuaBerita.filter(b => {
     const cocokQ = !q || (b.judul || '').toLowerCase().includes(q);
-    const cocokKat = !kat || b.kategori === kat;
+    const cocokKat = !kategoriAktif || b.kategori === kategoriAktif;
     return cocokQ && cocokKat;
   });
 }
@@ -568,21 +532,15 @@ fabToggle.addEventListener('click', function () {
   }
 });
 
-searchInput.addEventListener('input', function () {
-  tampilSemua = false;
-  renderBerita();
-});
-kategoriSelect.addEventListener('change', function () {
-  tampilSemua = false;
-  renderBerita();
-});
-refreshBtn.addEventListener('click', function () {
-  tampilSemua = false;
-  ambilBerita();
-});
+if (searchInput) {
+  searchInput.addEventListener('input', function () {
+    tampilSemua = false;
+    renderBerita();
+  });
+}
 
 // ============================================
-// LOAD KATEGORI DI NAVBAR VERCEL
+// LOAD KATEGORI DI NAVBAR
 // ============================================
 async function loadKategoriVercel() {
   const bar = document.getElementById("kategori-bar");
@@ -615,7 +573,7 @@ async function loadKategoriVercel() {
 
     a.addEventListener("click", function (e) {
       e.preventDefault();
-      kategoriSelect.value = k;
+      kategoriAktif = k;
       tampilSemua = false;
       renderBerita();
 
@@ -632,14 +590,15 @@ async function loadKategoriVercel() {
 }
 
 // ============================================
-// INIT VERCEL
+// INIT
 // ============================================
 document.addEventListener("DOMContentLoaded", function () {
+  // Kategori "Semua"
   const semua = document.querySelector('#kategori-bar [data-kategori=""]');
   if (semua) {
     semua.addEventListener("click", function (e) {
       e.preventDefault();
-      kategoriSelect.value = "";
+      kategoriAktif = "";
       tampilSemua = false;
       renderBerita();
       document.querySelectorAll("#kategori-bar .kategori-item").forEach(function (el) {
@@ -649,14 +608,32 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  const btnSearch = document.getElementById("nav-search-btn-vercel");
-  if (btnSearch) {
-    btnSearch.addEventListener("click", function () {
-      searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(function () { searchInput.focus(); }, 300);
+  // Refresh button di navbar
+  const btnRefresh = document.getElementById("nav-refresh");
+  if (btnRefresh) {
+    btnRefresh.addEventListener("click", function () {
+      tampilSemua = false;
+      ambilBerita();
     });
   }
 
+  // Search button di navbar
+  const btnSearch = document.getElementById("nav-search-btn-vercel");
+  if (btnSearch) {
+    btnSearch.addEventListener("click", function () {
+      if (searchWrap.style.display === "none") {
+        searchWrap.style.display = "block";
+        searchWrap.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(function () { searchInput.focus(); }, 300);
+      } else {
+        searchWrap.style.display = "none";
+        searchInput.value = "";
+        renderBerita();
+      }
+    });
+  }
+
+  // Logo klik → scroll ke atas
   const logo = document.getElementById("nav-logo-vercel");
   if (logo) {
     logo.addEventListener("click", function (e) {
