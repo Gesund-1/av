@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -33,17 +32,8 @@
     box-shadow: 0 4px 20px rgba(0,0,0,.4);
   }
 
-  header h1 {
-    font-size: 1.9rem;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-  }
-
-  header p {
-    margin-top: .5rem;
-    opacity: .9;
-    font-size: .95rem;
-  }
+  header h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; }
+  header p { margin-top: .5rem; opacity: .9; font-size: .95rem; }
 
   .status {
     display: inline-block;
@@ -84,7 +74,6 @@
   }
 
   .toolbar input { flex: 1; min-width: 200px; }
-
   .toolbar input:focus, .toolbar select:focus { border-color: var(--accent); }
 
   .toolbar button {
@@ -152,11 +141,7 @@
     align-self: flex-start;
   }
 
-  .card h3 {
-    margin: .6rem 0 .4rem;
-    font-size: 1.05rem;
-    line-height: 1.35;
-  }
+  .card h3 { margin: .6rem 0 .4rem; font-size: 1.05rem; line-height: 1.35; }
 
   .card .meta {
     font-size: .78rem;
@@ -232,7 +217,7 @@
 
 <script>
 // ============================================
-// ⚙️ GANTI URL INI DENGAN SUBDOMAIN SERVEO ANDA
+// ⚙️ GANTI DENGAN SUBDOMAIN SERVEO ANDA
 // ============================================
 const API_BASE = "https://news.serveousercontent.com";
 
@@ -268,7 +253,7 @@ function escapeHtml(s) {
   }[c]));
 }
 
-// ===== FETCH DAFTAR BERITA =====
+// ===== FETCH =====
 async function ambilBerita() {
   setStatus('Menghubungkan ke server Termux...', 'loading');
   grid.innerHTML = `<div class="empty"><div class="spinner"></div>Memuat berita...</div>`;
@@ -277,10 +262,7 @@ async function ambilBerita() {
     const res = await fetch(API_BASE + "/api/berita", { cache: "no-store" });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const json = await res.json();
-
-    if (!json.sukses || !Array.isArray(json.data)) {
-      throw new Error("Format respons tidak valid");
-    }
+    if (!json.sukses || !Array.isArray(json.data)) throw new Error("Format respons tidak valid");
 
     semuaBerita = json.data;
     setStatus(`Online — ${semuaBerita.length} berita`, 'online');
@@ -300,25 +282,27 @@ async function ambilBerita() {
   }
 }
 
-// ===== DROPDOWN KATEGORI =====
 function isiKategori() {
   const unik = [...new Set(semuaBerita.map(b => b.kategori).filter(Boolean))];
   kategoriSelect.innerHTML = '<option value="">Semua Kategori</option>' +
     unik.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
 }
 
-// ===== RENDER KARTU (buka di tab baru) =====
+// ===== RENDER KARTU — kirim ?from= URL Vercel =====
 function renderBerita(list) {
   if (!list.length) {
     grid.innerHTML = `<div class="empty">Tidak ada berita yang cocok.</div>`;
     return;
   }
 
+  // URL asal (Vercel) untuk dikirim ke navbar berita
+  const asalUrl = encodeURIComponent(window.location.origin);
+
   grid.innerHTML = list.map(b => {
     const gambar = b.gambar || `https://picsum.photos/seed/berita${b.id}/600/300`;
     return `
       <a class="card"
-         href="${API_BASE}/web/berita/${b.id}"
+         href="${API_BASE}/web/berita/${b.id}?from=${asalUrl}"
          target="_blank"
          rel="noopener noreferrer">
         <img src="${escapeHtml(gambar)}"
@@ -357,4 +341,4 @@ ambilBerita();
 </script>
 
 </body>
-  </html>
+</html>
