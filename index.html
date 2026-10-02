@@ -20,9 +20,7 @@
     --kategori-h: 44px;
   }
 
-  html {
-    scroll-behavior: smooth;
-  }
+  html { scroll-behavior: smooth; }
 
   body {
     font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -51,7 +49,6 @@
     background: linear-gradient(135deg, #0ea5e9, #6366f1);
   }
 
-  /* ===== LOGO 2 BARIS ===== */
   .navbar .nav-logo {
     display: flex;
     align-items: center;
@@ -60,10 +57,7 @@
     text-decoration: none;
     cursor: pointer;
   }
-  .navbar .nav-logo i {
-    font-size: 1.6rem;
-    line-height: 1;
-  }
+  .navbar .nav-logo i { font-size: 1.6rem; line-height: 1; }
   .navbar .nav-logo .logo-text {
     display: flex;
     flex-direction: column;
@@ -195,9 +189,7 @@
     margin-bottom: 1.5rem;
     position: relative;
   }
-  .search-wrap.show {
-    display: block;
-  }
+  .search-wrap.show { display: block; }
   .search-wrap .search-icon {
     position: absolute;
     left: 1rem;
@@ -223,9 +215,7 @@
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(56,189,248,.15);
   }
-  .search-wrap input::placeholder {
-    color: var(--muted);
-  }
+  .search-wrap input::placeholder { color: var(--muted); }
   .search-wrap .search-clear {
     position: absolute;
     right: .8rem;
@@ -249,78 +239,123 @@
     color: var(--text);
   }
 
-  /* ===== NEWS GRID — scroll-margin biar tidak ketutup navbar ===== */
+  /* ===== NEWS GRID ===== */
   #news-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-    gap: 1.5rem;
-
-    /* ⬇️ KUNCI: biar saat scroll ke sini, navbar tidak nutup */
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
     scroll-margin-top: calc(var(--navbar-h) + var(--kategori-h) + 16px);
   }
 
+  /* ===== KARTU BERITA (horizontal) ===== */
   .card {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: stretch;
     background: var(--card);
-    border-radius: 14px;
+    border-radius: 12px;
     overflow: hidden;
     text-decoration: none;
     color: var(--text);
     border: 1px solid var(--border);
-    transition: transform .2s, background .2s, box-shadow .2s;
-    scroll-margin-top: calc(var(--navbar-h) + var(--kategori-h) + 16px);
+    transition: transform .15s, background .15s, box-shadow .15s;
+    min-height: 100px;
   }
 
   .card:hover {
-    transform: translateY(-4px);
+    transform: translateX(4px);
     background: var(--card-hover);
-    box-shadow: 0 8px 24px rgba(56,189,248,.25);
+    box-shadow: 0 6px 20px rgba(56,189,248,.2);
   }
 
-  .card img {
+  .card .card-img {
+    flex: 0 0 25%;
+    max-width: 25%;
+    display: flex;
+    align-items: stretch;
+    background: #0f172a;
+    overflow: hidden;
+  }
+
+  .card .card-img img {
     width: 100%;
-    height: 170px;
+    height: 100%;
     object-fit: cover;
     display: block;
-    background: #0f172a;
+    min-height: 100px;
   }
 
-  .card-body {
-    padding: 1rem 1.1rem 1.2rem;
+  .card .card-body {
     flex: 1;
+    padding: .75rem 1rem;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 0;
+    overflow: hidden;
   }
 
-  .badge {
+  .card .card-body .badge {
     display: inline-block;
     background: var(--accent);
     color: #0f172a;
-    font-size: .7rem;
+    font-size: .65rem;
     font-weight: 700;
-    padding: .2rem .6rem;
+    padding: .15rem .5rem;
     border-radius: 999px;
     text-transform: uppercase;
     letter-spacing: .5px;
     align-self: flex-start;
   }
 
-  .card h3 { margin: .6rem 0 .4rem; font-size: 1.05rem; line-height: 1.35; }
-
-  .card .meta {
-    font-size: .78rem;
-    color: var(--muted);
-    margin-top: auto;
-    padding-top: .8rem;
+  .card .card-body h3 {
+    font-size: .95rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+    word-break: break-word;
   }
-  .card .meta i { margin-right: .2rem; }
 
+  .card .card-body .meta {
+    font-size: .72rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    flex-wrap: wrap;
+    overflow: hidden;
+  }
+  .card .card-body .meta i {
+    font-size: .7rem;
+    flex-shrink: 0;
+  }
+  .card .card-body .meta .penulis {
+    color: var(--muted);
+    max-width: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card .card-body .meta .tanggal {
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .card .card-body .meta .dot {
+    opacity: .5;
+  }
+
+  /* ===== Empty / Error / Loading ===== */
   .empty, .error {
     text-align: center;
     padding: 3rem 1rem;
     color: var(--muted);
-    grid-column: 1 / -1;
   }
   .error h3 { color: #f87171; margin-bottom: .5rem; }
   .error code {
@@ -376,6 +411,7 @@
     transform: translateY(20px);
   }
 
+  /* ===== RESPONSIVE ===== */
   @media (max-width: 600px) {
     :root {
       --navbar-h: 52px;
@@ -389,6 +425,14 @@
     .kategori-bar { padding: .5rem .75rem; }
     .kategori-item { font-size: .75rem; padding: .35rem .65rem; }
     .search-wrap input { font-size: .9rem; padding: .75rem 2.8rem .75rem 2.6rem; }
+
+    .card .card-img {
+      flex: 0 0 30%;
+      max-width: 30%;
+    }
+    .card .card-body { padding: .6rem .8rem; gap: .3rem; }
+    .card .card-body h3 { font-size: .88rem; }
+    .card .card-body .meta { font-size: .68rem; gap: .3rem; }
   }
 </style>
 </head>
@@ -414,8 +458,8 @@
         <i class="fa-solid fa-rotate-right"></i>
       </button>
 
-      <a href="#news-grid" class="nav-icon" id="nav-list-btn" title="Daftar Berita">
-        <i class="fa-solid fa-list"></i>
+      <a href="#" class="nav-icon" id="nav-top-btn" title="Ke Atas">
+        <i class="fa-solid fa-arrow-up"></i>
       </a>
 
       <button class="nav-icon" id="nav-search-btn-vercel" title="Cari Berita">
@@ -432,7 +476,6 @@
 </div>
 
 <main>
-  <!-- Search (toggle) -->
   <div class="search-wrap" id="search-wrap">
     <i class="fa-solid fa-magnifying-glass search-icon"></i>
     <input type="text" id="search" placeholder="Cari berita berdasarkan judul..." />
@@ -459,21 +502,20 @@
 </button>
 
 <script>
+// ============================================
+// IMAGE HELPER — thumbnail fixed kecil untuk home
+// ============================================
 window.ImageHelper = {
-  THUMB_HEIGHT: 170,
   buildThumbnail: function (berita, API_BASE) {
     let src = berita.gambar || "";
     if (!src) {
-      src = "https://via.placeholder.com/600x300?text=No+Image";
+      src = "https://via.placeholder.com/200x200?text=No+Image";
     } else if (src.startsWith("/")) {
       src = API_BASE + src;
     }
-    const tinggi = berita.gambar_tinggi || 170;
     const judulEscaped = String(berita.judul || "").replace(/"/g, "&quot;");
     return '<img src="' + src + '" alt="' + judulEscaped + '" loading="lazy" ' +
-           'style="width:100%;height:' + tinggi + 'px;object-fit:cover;' +
-           'display:block;background:#0f172a;" ' +
-           'onerror="this.src=\'https://via.placeholder.com/600x300?text=No+Image\'">';
+           'onerror="this.src=\'https://via.placeholder.com/200x200?text=No+Image\'">';
   }
 };
 
@@ -509,7 +551,6 @@ const searchClear = document.getElementById('search-clear');
 const fabToggle = document.getElementById('fab-toggle');
 const fabText = document.getElementById('fab-text');
 
-// ===== UTIL: Scroll ke elemen dengan offset navbar =====
 function scrollKeElemen(el) {
   if (!el) return;
   const navbarWrap = document.getElementById('navbar-wrap');
@@ -528,7 +569,7 @@ function formatTanggal(str) {
     const d = new Date(str);
     if (isNaN(d)) return str;
     return d.toLocaleDateString('id-ID', {
-      day: 'numeric', month: 'long', year: 'numeric'
+      day: 'numeric', month: 'short', year: 'numeric'
     });
   } catch { return str; }
 }
@@ -595,11 +636,17 @@ function renderBerita() {
       <a class="card"
          href="${API_BASE}/web/berita/${b.id}?from=${asalUrl}"
          target="_blank">
-        ${gambar}
+        <div class="card-img">${gambar}</div>
         <div class="card-body">
           <span class="badge">${escapeHtml(b.kategori || 'Umum')}</span>
           <h3>${escapeHtml(b.judul)}</h3>
-          <div class="meta"><i class="fa-solid fa-pen-nib"></i> ${escapeHtml(b.penulis || 'Anonim')} • ${formatTanggal(b.tanggal)}</div>
+          <div class="meta">
+            <i class="fa-solid fa-pen-nib"></i>
+            <span class="penulis">${escapeHtml(b.penulis || 'Anonim')}</span>
+            <span class="dot">•</span>
+            <i class="fa-solid fa-calendar"></i>
+            <span class="tanggal">${formatTanggal(b.tanggal)}</span>
+          </div>
         </div>
       </a>`;
   }).join('');
@@ -616,7 +663,7 @@ function updateFab(total) {
 
   if (tampilSemua) {
     fabToggle.querySelector('.icon').innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
-    fabText.textContent = 'Ringkas (5)';
+    fabText.textContent = `Ringkas (${BATAS_AWAL})`;
   } else {
     fabToggle.querySelector('.icon').innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
     fabText.textContent = `Lihat Semua (${total})`;
@@ -698,7 +745,6 @@ async function loadKategoriVercel() {
       });
       a.classList.add("active");
 
-      // Scroll ke grid — pakai offset biar tidak ketutup navbar
       scrollKeElemen(grid);
     });
 
@@ -710,7 +756,6 @@ async function loadKategoriVercel() {
 // INIT
 // ============================================
 document.addEventListener("DOMContentLoaded", function () {
-  // Kategori "Semua"
   const semua = document.querySelector('#kategori-bar [data-kategori=""]');
   if (semua) {
     semua.addEventListener("click", function (e) {
@@ -726,7 +771,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Refresh
   const btnRefresh = document.getElementById("nav-refresh");
   if (btnRefresh) {
     btnRefresh.addEventListener("click", function () {
@@ -735,16 +779,14 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // List button — scroll ke grid berita
-  const btnList = document.getElementById("nav-list-btn");
-  if (btnList) {
-    btnList.addEventListener("click", function (e) {
+  const btnTop = document.getElementById("nav-top-btn");
+  if (btnTop) {
+    btnTop.addEventListener("click", function (e) {
       e.preventDefault();
-      scrollKeElemen(grid);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
 
-  // Search button — toggle input
   const btnSearch = document.getElementById("nav-search-btn-vercel");
   if (btnSearch) {
     btnSearch.addEventListener("click", function () {
@@ -761,12 +803,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Logo klik → scroll ke atas
   const logo = document.getElementById("nav-logo-vercel");
   if (logo) {
     logo.addEventListener("click", function (e) {
       e.preventDefault();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
 
