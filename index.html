@@ -27,30 +27,133 @@
     padding-bottom: 80px;
   }
 
-  header {
-    background: linear-gradient(135deg, #0ea5e9, #6366f1);
-    padding: 2.5rem 1.5rem;
-    text-align: center;
+  /* ===== NAVBAR ===== */
+  #navbar-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    background: #0f172a;
     box-shadow: 0 4px 20px rgba(0,0,0,.4);
   }
 
-  header h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; }
+  .navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    padding: 0 1rem;
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  }
+
+  .navbar .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: -.3px;
+    cursor: pointer;
+  }
+  .navbar .nav-logo i { font-size: 1.2rem; }
+
+  .navbar .nav-actions {
+    display: flex;
+    gap: .4rem;
+    align-items: center;
+  }
+
+  .navbar .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: .95rem;
+    transition: background .15s, transform .15s;
+    font-family: inherit;
+  }
+  .navbar .nav-icon:hover {
+    background: rgba(255,255,255,.3);
+    transform: scale(1.05);
+  }
+
+  .kategori-bar {
+    display: flex;
+    gap: .5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: .6rem 1rem;
+    background: #1e293b;
+    border-top: 1px solid #334155;
+    border-bottom: 1px solid #334155;
+    scrollbar-width: thin;
+    scrollbar-color: #475569 transparent;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  .kategori-bar::-webkit-scrollbar { height: 4px; }
+  .kategori-bar::-webkit-scrollbar-track { background: transparent; }
+  .kategori-bar::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 2px;
+  }
+
+  .kategori-item {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .4rem .8rem;
+    border-radius: 999px;
+    background: #0f172a;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: .82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border: 1px solid #334155;
+    transition: all .15s;
+    cursor: pointer;
+  }
+  .kategori-item:hover {
+    background: #334155;
+    color: #e2e8f0;
+    border-color: #38bdf8;
+  }
+  .kategori-item.active {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: #fff;
+    border-color: transparent;
+  }
+  .kategori-item i { font-size: .8rem; }
+
+  /* ===== HEADER LAMA (opsional, bisa dihapus) ===== */
+  header {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+  header h1 { font-size: 1.5rem; font-weight: 800; }
   header h1 i { margin-right: .4rem; }
-  header p { margin-top: .5rem; opacity: .9; font-size: .95rem; }
+  header p { margin-top: .3rem; opacity: .9; font-size: .85rem; }
 
   .status {
     display: inline-block;
-    margin-top: 1rem;
+    margin-top: .8rem;
     padding: .3rem .9rem;
     border-radius: 999px;
     background: rgba(0,0,0,.25);
     font-size: .8rem;
     font-weight: 600;
   }
-
-  .status.online::before { content: ""; }
-  .status.offline::before { content: ""; }
-  .status.loading::before { content: ""; }
 
   main {
     max-width: 1100px;
@@ -90,7 +193,6 @@
     transition: transform .15s, filter .15s;
     font-family: inherit;
   }
-
   .toolbar button:hover { transform: translateY(-2px); filter: brightness(1.1); }
   .toolbar button i { margin-right: .3rem; }
 
@@ -162,10 +264,7 @@
     color: var(--muted);
     grid-column: 1 / -1;
   }
-
   .error h3 { color: #f87171; margin-bottom: .5rem; }
-  .error h3 i { margin-right: .4rem; }
-
   .error code {
     background: var(--card);
     padding: .1rem .4rem;
@@ -181,7 +280,6 @@
     animation: spin 1s linear infinite;
     margin: 0 auto 1rem;
   }
-
   @keyframes spin { to { transform: rotate(360deg); } }
 
   footer {
@@ -214,17 +312,46 @@
     font-family: inherit;
   }
   .fab:hover { transform: translateY(-3px); filter: brightness(1.1); }
-  .fab:active { transform: translateY(-1px); }
   .fab.hidden {
     opacity: 0;
     pointer-events: none;
     transform: translateY(20px);
   }
-  .fab .icon { font-size: 1rem; line-height: 1; }
-  .fab .text { white-space: nowrap; }
+
+  @media (max-width: 600px) {
+    .navbar { height: 52px; padding: 0 .75rem; }
+    .navbar .nav-logo { font-size: .9rem; }
+    .navbar .nav-icon { width: 32px; height: 32px; font-size: .85rem; }
+    .kategori-bar { padding: .5rem .75rem; }
+    .kategori-item { font-size: .75rem; padding: .35rem .65rem; }
+  }
 </style>
 </head>
 <body>
+
+<!-- ===== NAVBAR + KATEGORI BAR ===== -->
+<div id="navbar-wrap">
+  <nav class="navbar">
+    <a href="#" class="nav-logo" id="nav-logo-vercel" title="Beranda">
+      <i class="fa-solid fa-newspaper"></i>
+      <span>Portal Berita</span>
+    </a>
+    <div class="nav-actions">
+      <a href="#news-grid" class="nav-icon" title="Daftar Berita">
+        <i class="fa-solid fa-list"></i>
+      </a>
+      <button class="nav-icon" id="nav-search-btn-vercel" title="Cari Berita">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+    </div>
+  </nav>
+
+  <div class="kategori-bar" id="kategori-bar">
+    <a href="#" class="kategori-item active" data-kategori="">
+      <i class="fa-solid fa-house"></i> Semua
+    </a>
+  </div>
+</div>
 
 <header>
   <h1><i class="fa-solid fa-newspaper"></i> Portal Berita Termux</h1>
@@ -259,9 +386,6 @@
 </button>
 
 <script>
-// ============================================
-// IMAGE HELPER (inline)
-// ============================================
 window.ImageHelper = {
   THUMB_HEIGHT: 170,
   buildThumbnail: function (berita, API_BASE) {
@@ -280,12 +404,25 @@ window.ImageHelper = {
   }
 };
 
-// ============================================
-// ⚙️ GANTI DENGAN SUBDOMAIN SERVEO ANDA
-// ============================================
 const API_BASE = "https://news.serveousercontent.com";
-
 const BATAS_AWAL = 5;
+
+const ICON_KATEGORI = {
+  "Teknologi":   "fa-microchip",
+  "Sosial":      "fa-users",
+  "Lingkungan":  "fa-leaf",
+  "Kesehatan":   "fa-heart-pulse",
+  "Pendidikan":  "fa-graduation-cap",
+  "Ekonomi":     "fa-chart-line",
+  "Politik":     "fa-landmark",
+  "Olahraga":    "fa-futbol",
+  "Hiburan":     "fa-film",
+  "Tutorial":    "fa-book",
+  "Hewan":       "fa-paw",
+  "Umum":        "fa-circle-info",
+  "Budaya":      "fa-masks-theater",
+  "Sains":       "fa-flask"
+};
 
 let semuaBerita = [];
 let tampilSemua = false;
@@ -442,6 +579,93 @@ kategoriSelect.addEventListener('change', function () {
 refreshBtn.addEventListener('click', function () {
   tampilSemua = false;
   ambilBerita();
+});
+
+// ============================================
+// LOAD KATEGORI DI NAVBAR VERCEL
+// ============================================
+async function loadKategoriVercel() {
+  const bar = document.getElementById("kategori-bar");
+  if (!bar) return;
+
+  let kategori = [];
+  try {
+    const res = await fetch(API_BASE + "/api/kategori", { cache: "no-store" });
+    const json = await res.json();
+    if (json.sukses && Array.isArray(json.data)) {
+      kategori = json.data;
+    }
+  } catch (e) {
+    console.log("[Vercel] Gagal load kategori:", e);
+  }
+
+  if (!kategori.length) {
+    kategori = ["Teknologi","Sosial","Lingkungan","Kesehatan","Pendidikan",
+                "Ekonomi","Politik","Olahraga","Hiburan","Tutorial","Hewan","Umum"];
+  }
+
+  kategori.forEach(function (k) {
+    const a = document.createElement("a");
+    a.href = "#";
+    a.className = "kategori-item";
+    a.dataset.kategori = k;
+
+    const ikon = ICON_KATEGORI[k] || "fa-tag";
+    a.innerHTML = `<i class="fa-solid ${ikon}"></i> ${k}`;
+
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      kategoriSelect.value = k;
+      tampilSemua = false;
+      renderBerita();
+
+      document.querySelectorAll("#kategori-bar .kategori-item").forEach(function (el) {
+        el.classList.remove("active");
+      });
+      a.classList.add("active");
+
+      document.getElementById("news-grid").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    bar.appendChild(a);
+  });
+}
+
+// ============================================
+// INIT VERCEL
+// ============================================
+document.addEventListener("DOMContentLoaded", function () {
+  const semua = document.querySelector('#kategori-bar [data-kategori=""]');
+  if (semua) {
+    semua.addEventListener("click", function (e) {
+      e.preventDefault();
+      kategoriSelect.value = "";
+      tampilSemua = false;
+      renderBerita();
+      document.querySelectorAll("#kategori-bar .kategori-item").forEach(function (el) {
+        el.classList.remove("active");
+      });
+      semua.classList.add("active");
+    });
+  }
+
+  const btnSearch = document.getElementById("nav-search-btn-vercel");
+  if (btnSearch) {
+    btnSearch.addEventListener("click", function () {
+      searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(function () { searchInput.focus(); }, 300);
+    });
+  }
+
+  const logo = document.getElementById("nav-logo-vercel");
+  if (logo) {
+    logo.addEventListener("click", function (e) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  loadKategoriVercel();
 });
 
 ambilBerita();
