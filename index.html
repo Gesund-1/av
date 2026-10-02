@@ -31,7 +31,6 @@
     padding-bottom: 80px;
   }
 
-  /* ===== NAVBAR ===== */
   #navbar-wrap {
     position: sticky;
     top: 0;
@@ -124,7 +123,6 @@
     50% { opacity: .4; }
   }
 
-  /* ===== KATEGORI BAR ===== */
   .kategori-bar {
     display: flex;
     gap: .5rem;
@@ -175,14 +173,12 @@
   }
   .kategori-item i { font-size: .8rem; }
 
-  /* ===== MAIN ===== */
   main {
     max-width: 1100px;
     margin: 0 auto;
     padding: 1.5rem 1.25rem 4rem;
   }
 
-  /* ===== SEARCH WRAP ===== */
   .search-wrap {
     display: none;
     margin-bottom: 1.5rem;
@@ -238,7 +234,6 @@
     color: var(--text);
   }
 
-  /* ===== NEWS GRID ===== */
   #news-grid {
     display: flex;
     flex-direction: column;
@@ -246,7 +241,6 @@
     scroll-margin-top: calc(var(--navbar-h) + var(--kategori-h) + 16px);
   }
 
-  /* ===== KARTU BERITA ===== */
   .card {
     display: flex;
     flex-direction: row;
@@ -356,7 +350,6 @@
   .card .card-body .stats-row .stat.views i { color: #22c55e; }
   .card .card-body .stats-row .stat.reactions i { color: #f59e0b; }
 
-  /* ===== REACTION MINI ===== */
   .card .card-body .reaction-mini {
     display: flex;
     gap: .3rem;
@@ -394,7 +387,6 @@
   }
   .card .card-body .reaction-mini button i { font-size: .7rem; }
 
-  /* ===== Empty / Error ===== */
   .empty, .error {
     text-align: center;
     padding: 3rem 1rem;
@@ -426,7 +418,6 @@
     border-top: 1px solid var(--border);
   }
 
-  /* ===== FAB ===== */
   .fab {
     position: fixed;
     bottom: 1.5rem;
@@ -454,7 +445,6 @@
     transform: translateY(20px);
   }
 
-  /* ===== TOAST ===== */
   .toast {
     position: fixed;
     bottom: 5rem;
@@ -480,7 +470,6 @@
   }
   .toast.error { background: #ef4444; color: #fff; box-shadow: 0 6px 20px rgba(239,68,68,.5); }
 
-  /* ===== RESPONSIVE ===== */
   @media (max-width: 600px) {
     :root {
       --navbar-h: 52px;
@@ -506,7 +495,6 @@
 </head>
 <body>
 
-<!-- ===== NAVBAR ===== -->
 <div id="navbar-wrap">
   <nav class="navbar">
     <a href="#" class="nav-logo" id="nav-logo-vercel" title="Portal Berita Termux">
@@ -572,9 +560,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============================================
-// IMAGE HELPER
-// ============================================
 window.ImageHelper = {
   buildThumbnail: function (berita, API_BASE) {
     let src = berita.gambar || "";
@@ -591,7 +576,6 @@ window.ImageHelper = {
 
 const API_BASE = "https://news.serveousercontent.com";
 const BATAS_AWAL = 5;
-const GLOBAL_KEY = "reaction_global";   // ⬅️ kunci global untuk cek reaksi
 
 const ICON_KATEGORI = {
   "Teknologi":   "fa-microchip",
@@ -712,17 +696,16 @@ function hitungTotalReaksi(reactions) {
 
 function renderReactionMini(berita) {
   const reactions = berita.reactions || {};
-  const sudahReaksiGlobal = localStorage.getItem(GLOBAL_KEY);
+  // Cek localStorage PER BERITA
+  const sudahReaksi = localStorage.getItem("reaction_" + berita.id);
 
   return `
     <div class="reaction-mini" data-id="${berita.id}">
       ${Object.keys(REACTION_ICONS).map(function (tipe) {
         const r = REACTION_ICONS[tipe];
         const jumlah = reactions[tipe] || 0;
-        // Tandai aktif kalau user sudah reaksi tipe ini (global)
-        const aktif = (sudahReaksiGlobal === tipe) ? "active" : "";
-        // Disable semua tombol kalau user sudah reaksi apapun
-        const disabled = sudahReaksiGlobal ? "disabled" : "";
+        const aktif = (sudahReaksi === tipe) ? "active" : "";
+        const disabled = sudahReaksi ? "disabled" : "";
         return `
           <button class="reaction-mini-btn ${aktif}"
                   data-id="${berita.id}"
@@ -785,7 +768,7 @@ function renderBerita() {
       </a>`;
   }).join('');
 
-  // ===== PASANG EVENT REACTION MINI =====
+  // ===== EVENT REACTION MINI =====
   document.querySelectorAll(".reaction-mini-btn").forEach(function (btn) {
     btn.addEventListener("click", async function (e) {
       e.preventDefault();
@@ -794,9 +777,10 @@ function renderBerita() {
       const id = btn.dataset.id;
       const tipe = btn.dataset.tipe;
 
-      // Cek localStorage global (lapis 1)
-      if (localStorage.getItem(GLOBAL_KEY)) {
-        tampilkanToast("❌ Anda sudah memberi reaksi", true);
+      // Cek localStorage PER BERITA
+      const keyBerita = "reaction_" + id;
+      if (localStorage.getItem(keyBerita)) {
+        tampilkanToast("❌ Anda sudah memberi reaksi untuk berita ini", true);
         return;
       }
 
@@ -807,20 +791,19 @@ function renderBerita() {
         const json = await res.json();
 
         if (json.sukses) {
-          // Simpan global
-          localStorage.setItem(GLOBAL_KEY, tipe);
+          // Simpan PER BERITA
+          localStorage.setItem(keyBerita, tipe);
 
           btn.querySelector("span").textContent = json.data[tipe];
           btn.classList.add("active");
 
-          // Update total reaksi di kartu
           const card = btn.closest(".card");
           const totalReaksi = hitungTotalReaksi(json.data);
           const statReaksi = card.querySelector(".stat.reactions span");
           if (statReaksi) statReaksi.textContent = totalReaksi;
 
-          // Disable semua tombol reaction di semua kartu
-          document.querySelectorAll(".reaction-mini-btn").forEach(function (b) {
+          // Disable tombol HANYA di kartu ini
+          card.querySelectorAll(".reaction-mini-btn").forEach(function (b) {
             b.setAttribute("disabled", "disabled");
           });
 
@@ -829,11 +812,13 @@ function renderBerita() {
         } else if (res.status === 429) {
           tampilkanToast(json.pesan || "❌ Sudah reaksi", true);
           if (json.sudah) {
-            localStorage.setItem(GLOBAL_KEY, json.sudah.tipe || "already");
-            // Disable semua tombol
-            document.querySelectorAll(".reaction-mini-btn").forEach(function (b) {
-              b.setAttribute("disabled", "disabled");
-            });
+            localStorage.setItem(keyBerita, json.sudah);
+            const card = btn.closest(".card");
+            if (card) {
+              card.querySelectorAll(".reaction-mini-btn").forEach(function (b) {
+                b.setAttribute("disabled", "disabled");
+              });
+            }
           }
         } else {
           tampilkanToast(json.pesan || "Gagal kirim reaksi", true);
