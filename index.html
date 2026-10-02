@@ -16,6 +16,12 @@
     --text: #e2e8f0;
     --muted: #94a3b8;
     --border: #334155;
+    --navbar-h: 56px;
+    --kategori-h: 44px;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
@@ -40,23 +46,42 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 56px;
+    height: var(--navbar-h);
     padding: 0 1rem;
     background: linear-gradient(135deg, #0ea5e9, #6366f1);
   }
 
+  /* ===== LOGO 2 BARIS ===== */
   .navbar .nav-logo {
     display: flex;
     align-items: center;
-    gap: .5rem;
+    gap: .55rem;
     color: #fff;
     text-decoration: none;
-    font-weight: 800;
-    font-size: 1rem;
-    letter-spacing: -.3px;
     cursor: pointer;
   }
-  .navbar .nav-logo i { font-size: 1.2rem; }
+  .navbar .nav-logo i {
+    font-size: 1.6rem;
+    line-height: 1;
+  }
+  .navbar .nav-logo .logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -.3px;
+  }
+  .navbar .nav-logo .logo-text .line-1 {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: .85;
+    font-weight: 700;
+  }
+  .navbar .nav-logo .logo-text .line-2 {
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
 
   .navbar .nav-actions {
     display: flex;
@@ -85,7 +110,7 @@
     transform: scale(1.05);
   }
 
-  /* ===== STATUS DOT (di navbar) ===== */
+  /* ===== STATUS DOT ===== */
   .status-dot {
     display: flex;
     align-items: center;
@@ -164,10 +189,74 @@
     padding: 1.5rem 1.25rem 4rem;
   }
 
+  /* ===== SEARCH WRAP ===== */
+  .search-wrap {
+    display: none;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+  .search-wrap.show {
+    display: block;
+  }
+  .search-wrap .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: .95rem;
+    pointer-events: none;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: .85rem 3rem .85rem 2.8rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: .95rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .search-wrap input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(56,189,248,.15);
+  }
+  .search-wrap input::placeholder {
+    color: var(--muted);
+  }
+  .search-wrap .search-clear {
+    position: absolute;
+    right: .8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,.1);
+    border: none;
+    color: var(--muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: .8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, color .15s;
+  }
+  .search-wrap .search-clear:hover {
+    background: rgba(255,255,255,.2);
+    color: var(--text);
+  }
+
+  /* ===== NEWS GRID — scroll-margin biar tidak ketutup navbar ===== */
   #news-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
     gap: 1.5rem;
+
+    /* ⬇️ KUNCI: biar saat scroll ke sini, navbar tidak nutup */
+    scroll-margin-top: calc(var(--navbar-h) + var(--kategori-h) + 16px);
   }
 
   .card {
@@ -180,6 +269,7 @@
     color: var(--text);
     border: 1px solid var(--border);
     transition: transform .2s, background .2s, box-shadow .2s;
+    scroll-margin-top: calc(var(--navbar-h) + var(--kategori-h) + 16px);
   }
 
   .card:hover {
@@ -287,12 +377,18 @@
   }
 
   @media (max-width: 600px) {
-    .navbar { height: 52px; padding: 0 .75rem; }
-    .navbar .nav-logo { font-size: .9rem; }
-    .navbar .nav-logo span { display: none; }
+    :root {
+      --navbar-h: 52px;
+      --kategori-h: 40px;
+    }
+    .navbar { padding: 0 .75rem; }
+    .navbar .nav-logo i { font-size: 1.4rem; }
+    .navbar .nav-logo .logo-text .line-1 { font-size: .6rem; }
+    .navbar .nav-logo .logo-text .line-2 { font-size: 1rem; }
     .navbar .nav-icon, .status-dot { width: 32px; height: 32px; font-size: .85rem; }
     .kategori-bar { padding: .5rem .75rem; }
     .kategori-item { font-size: .75rem; padding: .35rem .65rem; }
+    .search-wrap input { font-size: .9rem; padding: .75rem 2.8rem .75rem 2.6rem; }
   }
 </style>
 </head>
@@ -301,28 +397,27 @@
 <!-- ===== NAVBAR ===== -->
 <div id="navbar-wrap">
   <nav class="navbar">
-    <a href="#" class="nav-logo" id="nav-logo-vercel" title="Portal Berita">
+    <a href="#" class="nav-logo" id="nav-logo-vercel" title="Portal Berita Termux">
       <i class="fa-solid fa-newspaper"></i>
-      <span>Portal Berita</span>
+      <span class="logo-text">
+        <span class="line-1">Portal Berita</span>
+        <span class="line-2">Termux</span>
+      </span>
     </a>
 
     <div class="nav-actions">
-      <!-- Status dot -->
       <div class="status-dot loading" id="status-dot" title="Menghubungkan...">
         <i class="fa-solid fa-circle"></i>
       </div>
 
-      <!-- Refresh -->
       <button class="nav-icon" id="nav-refresh" title="Refresh">
         <i class="fa-solid fa-rotate-right"></i>
       </button>
 
-      <!-- List -->
-      <a href="#news-grid" class="nav-icon" title="Daftar Berita">
+      <a href="#news-grid" class="nav-icon" id="nav-list-btn" title="Daftar Berita">
         <i class="fa-solid fa-list"></i>
       </a>
 
-      <!-- Search -->
       <button class="nav-icon" id="nav-search-btn-vercel" title="Cari Berita">
         <i class="fa-solid fa-magnifying-glass"></i>
       </button>
@@ -337,9 +432,13 @@
 </div>
 
 <main>
-  <!-- Search bar tersembunyi — muncul kalau klik icon search -->
-  <div class="search-wrap" id="search-wrap" style="display:none; margin-bottom:1.5rem;">
-    <input type="text" id="search" placeholder="Cari berita..." />
+  <!-- Search (toggle) -->
+  <div class="search-wrap" id="search-wrap">
+    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+    <input type="text" id="search" placeholder="Cari berita berdasarkan judul..." />
+    <button class="search-clear" id="search-clear" title="Bersihkan">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
   </div>
 
   <div id="news-grid">
@@ -406,10 +505,18 @@ const grid = document.getElementById('news-grid');
 const statusDot = document.getElementById('status-dot');
 const searchInput = document.getElementById('search');
 const searchWrap = document.getElementById('search-wrap');
-const kategoriSelect = null; // sudah tidak ada dropdown
-
+const searchClear = document.getElementById('search-clear');
 const fabToggle = document.getElementById('fab-toggle');
 const fabText = document.getElementById('fab-text');
+
+// ===== UTIL: Scroll ke elemen dengan offset navbar =====
+function scrollKeElemen(el) {
+  if (!el) return;
+  const navbarWrap = document.getElementById('navbar-wrap');
+  const offset = navbarWrap ? navbarWrap.offsetHeight : 100;
+  const top = el.getBoundingClientRect().top + window.pageYOffset - offset - 16;
+  window.scrollTo({ top: top, behavior: 'smooth' });
+}
 
 function setStatus(text, type) {
   statusDot.className = 'status-dot ' + type;
@@ -524,7 +631,7 @@ fabToggle.addEventListener('click', function () {
     setTimeout(function () {
       const cards = document.querySelectorAll('.card');
       if (cards.length > BATAS_AWAL) {
-        cards[BATAS_AWAL].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        scrollKeElemen(cards[BATAS_AWAL]);
       }
     }, 100);
   } else {
@@ -539,8 +646,17 @@ if (searchInput) {
   });
 }
 
+if (searchClear) {
+  searchClear.addEventListener('click', function () {
+    searchInput.value = "";
+    tampilSemua = false;
+    renderBerita();
+    searchInput.focus();
+  });
+}
+
 // ============================================
-// LOAD KATEGORI DI NAVBAR
+// LOAD KATEGORI
 // ============================================
 async function loadKategoriVercel() {
   const bar = document.getElementById("kategori-bar");
@@ -582,7 +698,8 @@ async function loadKategoriVercel() {
       });
       a.classList.add("active");
 
-      document.getElementById("news-grid").scrollIntoView({ behavior: "smooth", block: "start" });
+      // Scroll ke grid — pakai offset biar tidak ketutup navbar
+      scrollKeElemen(grid);
     });
 
     bar.appendChild(a);
@@ -605,10 +722,11 @@ document.addEventListener("DOMContentLoaded", function () {
         el.classList.remove("active");
       });
       semua.classList.add("active");
+      scrollKeElemen(grid);
     });
   }
 
-  // Refresh button di navbar
+  // Refresh
   const btnRefresh = document.getElementById("nav-refresh");
   if (btnRefresh) {
     btnRefresh.addEventListener("click", function () {
@@ -617,18 +735,28 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Search button di navbar
+  // List button — scroll ke grid berita
+  const btnList = document.getElementById("nav-list-btn");
+  if (btnList) {
+    btnList.addEventListener("click", function (e) {
+      e.preventDefault();
+      scrollKeElemen(grid);
+    });
+  }
+
+  // Search button — toggle input
   const btnSearch = document.getElementById("nav-search-btn-vercel");
   if (btnSearch) {
     btnSearch.addEventListener("click", function () {
-      if (searchWrap.style.display === "none") {
-        searchWrap.style.display = "block";
-        searchWrap.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(function () { searchInput.focus(); }, 300);
-      } else {
-        searchWrap.style.display = "none";
+      const aktif = searchWrap.classList.contains("show");
+      if (aktif) {
+        searchWrap.classList.remove("show");
         searchInput.value = "";
         renderBerita();
+      } else {
+        searchWrap.classList.add("show");
+        scrollKeElemen(searchWrap);
+        setTimeout(function () { searchInput.focus(); }, 300);
       }
     });
   }
