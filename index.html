@@ -339,7 +339,6 @@
   }
   .card .card-body .meta .dot { opacity: .5; }
 
-  /* ===== STATS ROW (views + reactions) ===== */
   .card .card-body .stats-row {
     display: flex;
     align-items: center;
@@ -353,18 +352,16 @@
     align-items: center;
     gap: .25rem;
   }
-  .card .card-body .stats-row .stat i {
-    color: var(--accent);
-    font-size: .75rem;
-  }
+  .card .card-body .stats-row .stat i { font-size: .75rem; }
   .card .card-body .stats-row .stat.views i { color: #22c55e; }
   .card .card-body .stats-row .stat.reactions i { color: #f59e0b; }
 
-  /* ===== REACTION BUTTONS DI KARTU ===== */
+  /* ===== REACTION MINI ===== */
   .card .card-body .reaction-mini {
     display: flex;
     gap: .3rem;
     margin-top: .2rem;
+    flex-wrap: wrap;
   }
   .card .card-body .reaction-mini button {
     display: flex;
@@ -380,7 +377,7 @@
     font-family: inherit;
     transition: all .15s;
   }
-  .card .card-body .reaction-mini button:hover {
+  .card .card-body .reaction-mini button:hover:not([disabled]) {
     background: rgba(56,189,248,.15);
     color: var(--accent);
     border-color: var(--accent);
@@ -391,9 +388,11 @@
     color: var(--accent);
     border-color: var(--accent);
   }
-  .card .card-body .reaction-mini button i {
-    font-size: .7rem;
+  .card .card-body .reaction-mini button[disabled] {
+    opacity: .4;
+    cursor: not-allowed;
   }
+  .card .card-body .reaction-mini button i { font-size: .7rem; }
 
   /* ===== Empty / Error ===== */
   .empty, .error {
@@ -472,11 +471,14 @@
     transition: opacity .2s, transform .2s;
     z-index: 9999;
     box-shadow: 0 6px 20px rgba(34,197,94,.5);
+    max-width: 90%;
+    text-align: center;
   }
   .toast.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
+  .toast.error { background: #ef4444; color: #fff; box-shadow: 0 6px 20px rgba(239,68,68,.5); }
 
   /* ===== RESPONSIVE ===== */
   @media (max-width: 600px) {
@@ -589,6 +591,7 @@ window.ImageHelper = {
 
 const API_BASE = "https://news.serveousercontent.com";
 const BATAS_AWAL = 5;
+const GLOBAL_KEY = "reaction_global";   // ⬅️ kunci global untuk cek reaksi
 
 const ICON_KATEGORI = {
   "Teknologi":   "fa-microchip",
@@ -628,10 +631,12 @@ const fabToggle = document.getElementById('fab-toggle');
 const fabText = document.getElementById('fab-text');
 const toast = document.getElementById('toast');
 
-function tampilkanToast(teks) {
+function tampilkanToast(teks, isError) {
   toast.textContent = teks;
-  toast.classList.add('show');
-  setTimeout(function () { toast.classList.remove('show'); }, 2000);
+  toast.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(function () {
+    toast.className = 'toast';
+  }, 2500);
 }
 
 function scrollKeElemen(el) {
@@ -702,25 +707,29 @@ function dapatkanFiltered() {
 
 function hitungTotalReaksi(reactions) {
   if (!reactions) return 0;
-  return Object.values(reactions).reduce((a, b) => a + b, 0);
+  return Object.keys(reactions).reduce((a, k) => a + (reactions[k] || 0), 0);
 }
 
 function renderReactionMini(berita) {
   const reactions = berita.reactions || {};
-  const sudahReaksi = localStorage.getItem("reaction_" + berita.id);
+  const sudahReaksiGlobal = localStorage.getItem(GLOBAL_KEY);
 
   return `
     <div class="reaction-mini" data-id="${berita.id}">
       ${Object.keys(REACTION_ICONS).map(function (tipe) {
         const r = REACTION_ICONS[tipe];
         const jumlah = reactions[tipe] || 0;
-        const aktif = sudahReaksi === tipe ? "active" : "";
+        // Tandai aktif kalau user sudah reaksi tipe ini (global)
+        const aktif = (sudahReaksiGlobal === tipe) ? "active" : "";
+        // Disable semua tombol kalau user sudah reaksi apapun
+        const disabled = sudahReaksiGlobal ? "disabled" : "";
         return `
           <button class="reaction-mini-btn ${aktif}"
                   data-id="${berita.id}"
                   data-tipe="${tipe}"
                   title="${tipe}"
-                  style="--warna: ${r.color}">
+                  style="--warna: ${r.color}"
+                  ${disabled}>
             <i class="fa-solid ${r.icon}"></i>
             <span>${jumlah}</span>
           </button>
@@ -776,7 +785,7 @@ function renderBerita() {
       </a>`;
   }).join('');
 
-  // Pasang event reaction
+  // ===== PASANG EVENT REACTION MINI =====
   document.querySelectorAll(".reaction-mini-btn").forEach(function (btn) {
     btn.addEventListener("click", async function (e) {
       e.preventDefault();
@@ -785,9 +794,9 @@ function renderBerita() {
       const id = btn.dataset.id;
       const tipe = btn.dataset.tipe;
 
-      const key = "reaction_" + id;
-      if (localStorage.getItem(key)) {
-        tampilkanToast("Anda sudah memberi reaksi untuk berita ini.");
+      // Cek localStorage global (lapis 1)
+      if (localStorage.getItem(GLOBAL_KEY)) {
+        tampilkanToast("❌ Anda sudah memberi reaksi", true);
         return;
       }
 
@@ -796,22 +805,42 @@ function renderBerita() {
           method: "POST"
         });
         const json = await res.json();
+
         if (json.sukses) {
-          localStorage.setItem(key, tipe);
+          // Simpan global
+          localStorage.setItem(GLOBAL_KEY, tipe);
+
           btn.querySelector("span").textContent = json.data[tipe];
           btn.classList.add("active");
 
-          // Update total reaksi
+          // Update total reaksi di kartu
           const card = btn.closest(".card");
-          const totalReaksi = Object.values(json.data).reduce((a, b) => a + b, 0);
+          const totalReaksi = hitungTotalReaksi(json.data);
           const statReaksi = card.querySelector(".stat.reactions span");
           if (statReaksi) statReaksi.textContent = totalReaksi;
 
-          tampilkanToast("Reaksi terkirim 👍");
+          // Disable semua tombol reaction di semua kartu
+          document.querySelectorAll(".reaction-mini-btn").forEach(function (b) {
+            b.setAttribute("disabled", "disabled");
+          });
+
+          tampilkanToast("✅ Reaksi terkirim");
+
+        } else if (res.status === 429) {
+          tampilkanToast(json.pesan || "❌ Sudah reaksi", true);
+          if (json.sudah) {
+            localStorage.setItem(GLOBAL_KEY, json.sudah.tipe || "already");
+            // Disable semua tombol
+            document.querySelectorAll(".reaction-mini-btn").forEach(function (b) {
+              b.setAttribute("disabled", "disabled");
+            });
+          }
+        } else {
+          tampilkanToast(json.pesan || "Gagal kirim reaksi", true);
         }
       } catch (err) {
         console.error("Reaction error:", err);
-        tampilkanToast("Gagal kirim reaksi");
+        tampilkanToast("Gagal kirim reaksi", true);
       }
     });
   });
