@@ -104,7 +104,6 @@
     transform: scale(1.05);
   }
 
-  /* ===== STATUS DOT ===== */
   .status-dot {
     display: flex;
     align-items: center;
@@ -247,7 +246,7 @@
     scroll-margin-top: calc(var(--navbar-h) + var(--kategori-h) + 16px);
   }
 
-  /* ===== KARTU BERITA (horizontal) ===== */
+  /* ===== KARTU BERITA ===== */
   .card {
     display: flex;
     flex-direction: row;
@@ -330,28 +329,73 @@
     align-items: center;
     gap: .35rem;
     flex-wrap: wrap;
-    overflow: hidden;
   }
-  .card .card-body .meta i {
-    font-size: .7rem;
-    flex-shrink: 0;
-  }
+  .card .card-body .meta i { font-size: .7rem; flex-shrink: 0; }
   .card .card-body .meta .penulis {
-    color: var(--muted);
-    max-width: 60%;
+    max-width: 50%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .card .card-body .meta .tanggal {
+  .card .card-body .meta .dot { opacity: .5; }
+
+  /* ===== STATS ROW (views + reactions) ===== */
+  .card .card-body .stats-row {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    font-size: .72rem;
     color: var(--muted);
-    white-space: nowrap;
+    margin-top: .1rem;
   }
-  .card .card-body .meta .dot {
-    opacity: .5;
+  .card .card-body .stats-row .stat {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+  }
+  .card .card-body .stats-row .stat i {
+    color: var(--accent);
+    font-size: .75rem;
+  }
+  .card .card-body .stats-row .stat.views i { color: #22c55e; }
+  .card .card-body .stats-row .stat.reactions i { color: #f59e0b; }
+
+  /* ===== REACTION BUTTONS DI KARTU ===== */
+  .card .card-body .reaction-mini {
+    display: flex;
+    gap: .3rem;
+    margin-top: .2rem;
+  }
+  .card .card-body .reaction-mini button {
+    display: flex;
+    align-items: center;
+    gap: .2rem;
+    padding: .15rem .45rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,.05);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-size: .68rem;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .card .card-body .reaction-mini button:hover {
+    background: rgba(56,189,248,.15);
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.08);
+  }
+  .card .card-body .reaction-mini button.active {
+    background: rgba(56,189,248,.2);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .card .card-body .reaction-mini button i {
+    font-size: .7rem;
   }
 
-  /* ===== Empty / Error / Loading ===== */
+  /* ===== Empty / Error ===== */
   .empty, .error {
     text-align: center;
     padding: 3rem 1rem;
@@ -411,6 +455,29 @@
     transform: translateY(20px);
   }
 
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed;
+    bottom: 5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #22c55e;
+    color: #0f172a;
+    padding: .7rem 1.2rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: .85rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+    z-index: 9999;
+    box-shadow: 0 6px 20px rgba(34,197,94,.5);
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
   /* ===== RESPONSIVE ===== */
   @media (max-width: 600px) {
     :root {
@@ -426,13 +493,12 @@
     .kategori-item { font-size: .75rem; padding: .35rem .65rem; }
     .search-wrap input { font-size: .9rem; padding: .75rem 2.8rem .75rem 2.6rem; }
 
-    .card .card-img {
-      flex: 0 0 30%;
-      max-width: 30%;
-    }
+    .card .card-img { flex: 0 0 30%; max-width: 30%; }
     .card .card-body { padding: .6rem .8rem; gap: .3rem; }
     .card .card-body h3 { font-size: .88rem; }
-    .card .card-body .meta { font-size: .68rem; gap: .3rem; }
+    .card .card-body .meta { font-size: .68rem; }
+    .card .card-body .stats-row { font-size: .68rem; gap: .6rem; }
+    .card .card-body .reaction-mini button { padding: .1rem .35rem; font-size: .62rem; }
   }
 </style>
 </head>
@@ -501,9 +567,11 @@
   <span class="text" id="fab-text">Lihat Semua</span>
 </button>
 
+<div class="toast" id="toast"></div>
+
 <script>
 // ============================================
-// IMAGE HELPER — thumbnail fixed kecil untuk home
+// IMAGE HELPER
 // ============================================
 window.ImageHelper = {
   buildThumbnail: function (berita, API_BASE) {
@@ -539,6 +607,14 @@ const ICON_KATEGORI = {
   "Sains":       "fa-flask"
 };
 
+const REACTION_ICONS = {
+  "like":  { icon: "fa-thumbs-up",      color: "#38bdf8" },
+  "love":  { icon: "fa-heart",          color: "#ef4444" },
+  "wow":   { icon: "fa-face-surprise",  color: "#f59e0b" },
+  "sad":   { icon: "fa-face-sad-tear",  color: "#94a3b8" },
+  "angry": { icon: "fa-face-angry",     color: "#f97316" }
+};
+
 let semuaBerita = [];
 let tampilSemua = false;
 let kategoriAktif = "";
@@ -550,6 +626,13 @@ const searchWrap = document.getElementById('search-wrap');
 const searchClear = document.getElementById('search-clear');
 const fabToggle = document.getElementById('fab-toggle');
 const fabText = document.getElementById('fab-text');
+const toast = document.getElementById('toast');
+
+function tampilkanToast(teks) {
+  toast.textContent = teks;
+  toast.classList.add('show');
+  setTimeout(function () { toast.classList.remove('show'); }, 2000);
+}
 
 function scrollKeElemen(el) {
   if (!el) return;
@@ -591,7 +674,6 @@ async function ambilBerita() {
     if (!json.sukses || !Array.isArray(json.data)) throw new Error("Format respons tidak valid");
 
     semuaBerita = json.data.slice().sort((a, b) => (b.id || 0) - (a.id || 0));
-
     setStatus(`Online — ${semuaBerita.length} berita`, 'online');
     renderBerita();
   } catch (err) {
@@ -618,6 +700,36 @@ function dapatkanFiltered() {
   });
 }
 
+function hitungTotalReaksi(reactions) {
+  if (!reactions) return 0;
+  return Object.values(reactions).reduce((a, b) => a + b, 0);
+}
+
+function renderReactionMini(berita) {
+  const reactions = berita.reactions || {};
+  const sudahReaksi = localStorage.getItem("reaction_" + berita.id);
+
+  return `
+    <div class="reaction-mini" data-id="${berita.id}">
+      ${Object.keys(REACTION_ICONS).map(function (tipe) {
+        const r = REACTION_ICONS[tipe];
+        const jumlah = reactions[tipe] || 0;
+        const aktif = sudahReaksi === tipe ? "active" : "";
+        return `
+          <button class="reaction-mini-btn ${aktif}"
+                  data-id="${berita.id}"
+                  data-tipe="${tipe}"
+                  title="${tipe}"
+                  style="--warna: ${r.color}">
+            <i class="fa-solid ${r.icon}"></i>
+            <span>${jumlah}</span>
+          </button>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
 function renderBerita() {
   const list = dapatkanFiltered();
 
@@ -632,6 +744,8 @@ function renderBerita() {
 
   grid.innerHTML = tampil.map(b => {
     const gambar = ImageHelper.buildThumbnail(b, API_BASE);
+    const totalReaksi = hitungTotalReaksi(b.reactions);
+
     return `
       <a class="card"
          href="${API_BASE}/web/berita/${b.id}?from=${asalUrl}"
@@ -645,11 +759,62 @@ function renderBerita() {
             <span class="penulis">${escapeHtml(b.penulis || 'Anonim')}</span>
             <span class="dot">•</span>
             <i class="fa-solid fa-calendar"></i>
-            <span class="tanggal">${formatTanggal(b.tanggal)}</span>
+            <span>${formatTanggal(b.tanggal)}</span>
           </div>
+          <div class="stats-row">
+            <div class="stat views">
+              <i class="fa-solid fa-eye"></i>
+              <span>${b.views || 0}</span>
+            </div>
+            <div class="stat reactions">
+              <i class="fa-solid fa-face-smile"></i>
+              <span>${totalReaksi}</span>
+            </div>
+          </div>
+          ${renderReactionMini(b)}
         </div>
       </a>`;
   }).join('');
+
+  // Pasang event reaction
+  document.querySelectorAll(".reaction-mini-btn").forEach(function (btn) {
+    btn.addEventListener("click", async function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const id = btn.dataset.id;
+      const tipe = btn.dataset.tipe;
+
+      const key = "reaction_" + id;
+      if (localStorage.getItem(key)) {
+        tampilkanToast("Anda sudah memberi reaksi untuk berita ini.");
+        return;
+      }
+
+      try {
+        const res = await fetch(API_BASE + "/api/reaction/" + id + "?tipe=" + tipe, {
+          method: "POST"
+        });
+        const json = await res.json();
+        if (json.sukses) {
+          localStorage.setItem(key, tipe);
+          btn.querySelector("span").textContent = json.data[tipe];
+          btn.classList.add("active");
+
+          // Update total reaksi
+          const card = btn.closest(".card");
+          const totalReaksi = Object.values(json.data).reduce((a, b) => a + b, 0);
+          const statReaksi = card.querySelector(".stat.reactions span");
+          if (statReaksi) statReaksi.textContent = totalReaksi;
+
+          tampilkanToast("Reaksi terkirim 👍");
+        }
+      } catch (err) {
+        console.error("Reaction error:", err);
+        tampilkanToast("Gagal kirim reaksi");
+      }
+    });
+  });
 
   updateFab(list.length);
 }
@@ -677,9 +842,7 @@ fabToggle.addEventListener('click', function () {
   if (tampilSemua) {
     setTimeout(function () {
       const cards = document.querySelectorAll('.card');
-      if (cards.length > BATAS_AWAL) {
-        scrollKeElemen(cards[BATAS_AWAL]);
-      }
+      if (cards.length > BATAS_AWAL) scrollKeElemen(cards[BATAS_AWAL]);
     }, 100);
   } else {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -713,9 +876,7 @@ async function loadKategoriVercel() {
   try {
     const res = await fetch(API_BASE + "/api/kategori", { cache: "no-store" });
     const json = await res.json();
-    if (json.sukses && Array.isArray(json.data)) {
-      kategori = json.data;
-    }
+    if (json.sukses && Array.isArray(json.data)) kategori = json.data;
   } catch (e) {
     console.log("[Vercel] Gagal load kategori:", e);
   }
@@ -744,7 +905,6 @@ async function loadKategoriVercel() {
         el.classList.remove("active");
       });
       a.classList.add("active");
-
       scrollKeElemen(grid);
     });
 
