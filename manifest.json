@@ -1,7 +1,7 @@
 {
   "name": "Portal Berita Termux",
   "short_name": "Berita Termux",
-  "description": "Portal berita yang disajikan langsung dari server ponsel via Serveo Tunnel",
+  "description": "Portal berita dari server ponsel via Serveo Tunnel",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -10,25 +10,24 @@
   "theme_color": "#0ea5e9",
   "lang": "id",
   "dir": "ltr",
-  "categories": ["news", "education", "social"],
   "icons": [
-    {
-      "src": "/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
