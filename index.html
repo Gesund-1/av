@@ -4,19 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Portal Berita Termux</title>
-
-<!-- ===== PWA ===== -->
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0ea5e9">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Berita Termux">
-<meta name="mobile-web-app-capable" content="yes">
-
-<!-- ===== Icon ===== -->
-<link rel="icon" type="image/png" href="/icon-192.png">
-<link rel="apple-touch-icon" href="/icon-192.png">
-
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1037,21 +1024,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 ambilBerita();
-
-// ============================================
-// PWA — Register Service Worker
-// ============================================
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", function () {
-    navigator.serviceWorker.register("/sw.js")
-      .then(function (reg) {
-        console.log("[PWA] Service Worker terdaftar:", reg.scope);
-      })
-      .catch(function (err) {
-        console.log("[PWA] Gagal daftar SW:", err);
-      });
-  });
-}
 </script>
 
 </body>
