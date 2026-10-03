@@ -7,7 +7,8 @@ const STATIC_ASSETS = [
   "/",
   "/index.html",
   "/manifest.json",
-  "/icon.svg",
+  "/icon-192.png",
+  "/icon-512.png",
   "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
 ];
 
@@ -44,14 +45,14 @@ self.addEventListener("fetch", function (event) {
 
   if (event.request.method !== "GET") return;
 
-  // API (Serveo) — network-first
+  // API Serveo → network-first
   if (url.hostname.includes("serveousercontent.com")) {
     event.respondWith(
       fetch(event.request)
         .then(function (response) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(function (cache) {
-            cache.put(event.request, clone).catch(function(){});
+            cache.put(event.request, clone).catch(function () {});
           });
           return response;
         })
@@ -67,15 +68,16 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  // Static — cache-first
+  // Static → cache-first
   event.respondWith(
     caches.match(event.request).then(function (cached) {
       if (cached) return cached;
+
       return fetch(event.request).then(function (response) {
         if (response.status === 200 && url.origin === location.origin) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(function (cache) {
-            cache.put(event.request, clone).catch(function(){});
+            cache.put(event.request, clone).catch(function () {});
           });
         }
         return response;
