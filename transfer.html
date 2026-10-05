@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Termux File Manager (Remote)</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; background: #f4f4f9; }
+        h1 { color: #333; text-align: center; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,.1); }
+        .banner { background: linear-gradient(135deg, #1e1e2e, #2a2a40); color: #e0e0e0; padding: 15px; border-radius: 8px; margin-bottom: 16px; font-family: monospace; font-size: 13px; }
+        .banner h3 { margin: 0 0 8px; color: #7fd1ff; font-family: sans-serif; font-size: 14px; }
+        .banner code { color: #7fd1ff; background: #0d0d15; padding: 2px 8px; border-radius: 4px; word-break: break-all; }
+        .status { font-size: 12px; margin-top: 8px; }
+        .status.ok { color: #4CAF50; }
+        .status.err { color: #e53935; }
+        .status.pending { color: #ffb300; }
+        .upload-section { background: #eef; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .drop-zone { border: 2px dashed #008CBA; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; background: #f8f9fa; transition: all .3s; }
+        .drop-zone.dragover { background: #e3f2fd; border-color: #4CAF50; }
+        .drop-zone .text { color: #666; font-size: 16px; }
+        .drop-zone .sub-text { color: #999; font-size: 12px; margin-top: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background: #f2f2f2; }
+        .btn-download { background: #4CAF50; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .btn-download:hover { background: #45a049; }
+        .btn-delete { background: #e53935; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin-left: 5px; font-size: 14px; }
+        .btn-delete:hover { background: #c62828; }
+        .empty { text-align: center; color: #999; padding: 20px; }
+        .toast { position: fixed; top: 20px; right: 20px; background: #333; color: #fff; padding: 10px 16px; border-radius: 6px; opacity: 0; transition: opacity .3s; z-index: 9999; font-size: 14px; pointer-events: none; }
+        .toast.show { opacity: 1; }
+        .toast.error { background: #e53935; }
+        .toast.success { background: #43a047; }
+        .footer { text-align: center; margin-top: 30px; color: #888; font-size: .8em; }
+        @media (max-width: 600px) { .drop-zone { padding: 20px; } table { font-size: 14px; } td, th { padding: 8px; } }
+    </style>
+</head>
+<body>
+    <h1>Termux File Manager</h1>
+
+    <div class="banner">
+        <h3>&#128279; API Server (Serveo)</h3>
+       
+        <div id="status" class="status pending">Cek koneksi...</div>
+    </div>
+
+    <div class="container">
+        <div class="upload-section">
+            <h3>Upload File</h3>
+            <div id="dropZone" class="drop-zone">
+                <div class="text">Drag &amp; drop file di sini</div>
+                <div class="sub-text">Atau klik untuk memilih file</div>
+                <input type="file" id="fileInput" style="display:none;">
+            </div>
+            <div id="loader" style="display:none;text-align:center;color:#008CBA;margin-top:8px;">Uploading...</div>
+        </div>
+
+        <h3>File Tersimpan</h3>
+        <div id="fileList"><p class="empty">Memuat...</p></div>
+    </div>
+
+    <div class="footer">Frontend: Vercel | Backend: Termux + Serveo </div>
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // ====== HARDCODE URL API SERVEO ======
+        var API = 'https://shr.serveousercontent.com';
+        // =====================================
+
+        function toast(msg, type) {
+            var el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = 'toast show ' + (type || '');
+            clearTimeout(el._t);
+            el._t = setTimeout(function(){ el.className = 'toast ' + (type || ''); }, 2500);
+        }
+        function setStatus(msg, cls) {
+            var el = document.getElementById('status');
+            el.textContent = msg;
+            el.className = 'status ' + (cls || '');
+        }
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, function(c){
+                return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+            });
+        }
+
+        async function testConnection() {
+            setStatus('Menghubungi ' + "API" + ' ...', 'pending');
+            try {
+                var res = await fetch(API + '/api/serveo', { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                var data = await res.json();
+                setStatus('\u2705 Online \u2014 ' + (data.url || API), 'ok');
+                loadFiles();
+            } catch (err) {
+                setStatus('\u274C Gagal: ' + err.message + ' (cek Termux & Serveo aktif?)', 'err');
+            }
+        }
+
+        async function loadFiles() {
+            var box = document.getElementById('fileList');
+            box.innerHTML = '<p class="empty">Memuat...</p>';
+            try {
+                var res = await fetch(API + '/api/files', { cache: 'no-store' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                var data = await res.json();
+                if (!data.files || !data.files.length) {
+                    box.innerHTML = '<p class="empty">Belum ada file.</p>';
+                    return;
+                }
+                var rows = '';
+                data.files.forEach(function(f){
+                    var enc = encodeURIComponent(f.name);
+                    var safe = escapeHtml(f.name).replace(/'/g, "\\'");
+                    rows += '<tr><td>' + escapeHtml(f.name) + '</td><td>' + escapeHtml(f.size) + '</td><td>' +
+                        '<button class="btn-download" onclick="downloadFile(\'' + enc + '\',\'' + safe + '\')">Download</button>' +
+                        '<button class="btn-delete" onclick="deleteFile(\'' + enc + '\',\'' + safe + '\')">Hapus</button>' +
+                    '</td></tr>';
+                });
+                box.innerHTML = '<table><thead><tr><th>Nama</th><th>Ukuran</th><th>Aksi</th></tr></thead><tbody>' + rows + '</tbody></table>';
+            } catch (err) {
+                box.innerHTML = '<p class="empty" style="color:#e53935;">Gagal: ' + escapeHtml(err.message) + '</p>';
+            }
+        }
+
+        function downloadFile(enc, name) {
+            window.open(API + '/download/' + enc, '_blank');
+            toast('Download: ' + name, 'success');
+        }
+        async function deleteFile(enc, name) {
+            if (!confirm('Hapus "' + name + '"?')) return;
+            try {
+                var res = await fetch(API + '/api/delete/' + enc, { method: 'DELETE' });
+                var data = await res.json();
+                if (!res.ok || !data.ok) throw new Error(data.error || 'gagal');
+                toast('Terhapus: ' + name, 'success');
+                loadFiles();
+            } catch (err) { toast('Error: ' + err.message, 'error'); }
+        }
+        async function uploadFile(file) {
+            if (!file) return;
+            var form = new FormData();
+            form.append('file', file);
+            document.getElementById('loader').style.display = 'block';
+            try {
+                var res = await fetch(API + '/api/upload', { method: 'POST', body: form });
+                var data = await res.json();
+                if (!res.ok || !data.ok) throw new Error(data.error || 'gagal');
+                toast('Upload: ' + data.name, 'success');
+                loadFiles();
+            } catch (err) { toast('Upload error: ' + err.message, 'error'); }
+            finally {
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('fileInput').value = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function(){
+            document.getElementById('apiUrlLabel').textContent = API;
+
+            var dz = document.getElementById('dropZone');
+            var fi = document.getElementById('fileInput');
+            dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('dragover'); });
+            dz.addEventListener('dragleave', function(e){ e.preventDefault(); dz.classList.remove('dragover'); });
+            dz.addEventListener('drop', function(e){
+                e.preventDefault(); dz.classList.remove('dragover');
+                if (e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]);
+            });
+            dz.addEventListener('click', function(){ fi.click(); });
+            fi.addEventListener('change', function(){ if (this.files.length) uploadFile(this.files[0]); });
+
+            var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+            document.querySelector('.drop-zone .text').textContent = isMobile ? 'Tap untuk pilih file' : 'Drag & drop file di sini';
+
+            testConnection();
+            setInterval(testConnection, 30000);
+        });
+    </script>
+</body>
+</html>

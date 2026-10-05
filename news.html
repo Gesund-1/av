@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Portal Berita Termux</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-hover: #334155;
+    --accent: #38bdf8;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #334155;
+    --navbar-h: 56px;
+    --kategori-h: 44px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  #navbar-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    background: #0f172a;
+    box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  }
+
+  .navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--navbar-h);
+    padding: 0 1rem;
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  }
+
+  .navbar .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .navbar .nav-logo i { font-size: 1.6rem; line-height: 1; }
+  .navbar .nav-logo .logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -.3px;
+  }
+  .navbar .nav-logo .logo-text .line-1 {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: .85;
+    font-weight: 700;
+  }
+  .navbar .nav-logo .logo-text .line-2 {
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+
+  .navbar .nav-actions {
+    display: flex;
+    gap: .4rem;
+    align-items: center;
+  }
+
+  .navbar .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: .95rem;
+    transition: background .15s, transform .15s;
+    font-family: inherit;
+    position: relative;
+  }
+  .navbar .nav-icon:hover {
+    background: rgba(255,255,255,.3);
+    transform: scale(1.05);
+  }
+  .navbar .nav-icon .badge-count {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    background: #f59e0b;
+    color: #0f172a;
+    font-size: .6rem;
+    font-weight: 700;
+    padding: .1rem .35rem;
+    border-radius: 999px;
+    min-width: 16px;
+    text-align: center;
+  }
+
+  .status-dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.15);
+    cursor: default;
+    font-size: .8rem;
+  }
+  .status-dot.loading i { color: #fbbf24; animation: pulse 1s infinite; }
+  .status-dot.online  i { color: #22c55e; }
+  .status-dot.offline i { color: #ef4444; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+
+  .kategori-bar {
+    display: flex;
+    gap: .5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: .6rem 1rem;
+    background: #1e293b;
+    border-top: 1px solid #334155;
+    border-bottom: 1px solid #334155;
+    scrollbar-width: thin;
+    scrollbar-color: #475569 transparent;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  .kategori-bar::-webkit-scrollbar { height: 4px; }
+  .kategori-bar::-webkit-scrollbar-track { background: transparent; }
+  .kategori-bar::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 2px;
+  }
+
+  .kategori-item {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .4rem .8rem;
+    border-radius: 999px;
+    background: #0f172a;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: .82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border: 1px solid #334155;
+    transition: all .15s;
+    cursor: pointer;
+  }
+  .kategori-item:hover {
+    background: #334155;
+    color: #e2e8f0;
+    border-color: #38bdf8;
+  }
+  .kategori-item.active {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: #fff;
+    border-color: transparent;
+  }
+  .kategori-item i { font-size: .8rem; }
+
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 4rem;
+  }
+
+  .search-wrap {
+    display: none;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+  .search-wrap.show { display: block; }
+  .search-wrap .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: .95rem;
+    pointer-events: none;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: .85rem 3rem .85rem 2.8rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: .95rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .search-wrap input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(56,189,248,.15);
+  }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-wrap .search-clear {
+    position: absolute;
+    right: .8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,.1);
+    border: none;
+    color: var(--muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: .8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, color .15s;
+  }
+  .search-wrap .search-clear:hover {
+    background: rgba(255,255,255,.2);
+    color: var(--text);
+  }
+
+  #news-grid {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    scroll-margin-top: calc(var(--navbar-h) + var(--kategori-h) + 16px);
+  }
+
+  .card {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    background: var(--card);
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text);
+    border: 1px solid var(--border);
+    transition: transform .15s, background .15s, box-shadow .15s;
+    min-height: 100px;
+    position: relative;
+  }
+
+  .card:hover {
+    transform: translateX(4px);
+    background: var(--card-hover);
+    box-shadow: 0 6px 20px rgba(56,189,248,.2);
+  }
+
+  .card .card-img {
+    flex: 0 0 25%;
+    max-width: 25%;
+    display: flex;
+    align-items: stretch;
+    background: #0f172a;
+    overflow: hidden;
+  }
+
+  .card .card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    min-height: 100px;
+  }
+
+  .card .card-body {
+    flex: 1;
+    padding: .75rem 3rem .75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .card .card-body .btn-bookmark {
+    position: absolute;
+    top: .6rem;
+    right: .6rem;
+    background: rgba(0,0,0,.4);
+    border: none;
+    color: #94a3b8;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: .85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s;
+    z-index: 2;
+    font-family: inherit;
+  }
+  .card .card-body .btn-bookmark:hover {
+    background: rgba(56,189,248,.3);
+    color: #38bdf8;
+    transform: scale(1.1);
+  }
+  .card .card-body .btn-bookmark.active {
+    background: #f59e0b;
+    color: #0f172a;
+  }
+
+  .card .card-body .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #0f172a;
+    font-size: .65rem;
+    font-weight: 700;
+    padding: .15rem .5rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    align-self: flex-start;
+  }
+
+  .card .card-body h3 {
+    font-size: .95rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  .card .card-body .snippet {
+    font-size: .75rem;
+    color: var(--muted);
+    font-style: italic;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-top: .1rem;
+    padding-left: .4rem;
+    border-left: 2px solid var(--accent);
+  }
+
+  .card .card-body .meta {
+    font-size: .72rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    flex-wrap: wrap;
+  }
+  .card .card-body .meta i { font-size: .7rem; flex-shrink: 0; }
+  .card .card-body .meta .penulis {
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card .card-body .meta .dot { opacity: .5; }
+
+  .card .card-body .stats-row {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    font-size: .72rem;
+    color: var(--muted);
+    margin-top: .1rem;
+  }
+  .card .card-body .stats-row .stat {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+  }
+  .card .card-body .stats-row .stat i { font-size: .75rem; }
+  .card .card-body .stats-row .stat.views i { color: #22c55e; }
+  .card .card-body .stats-row .stat.reactions i { color: #f59e0b; }
+
+  .card .card-body .reaction-mini {
+    display: flex;
+    gap: .3rem;
+    margin-top: .2rem;
+    flex-wrap: wrap;
+  }
+  .card .card-body .reaction-mini button {
+    display: flex;
+    align-items: center;
+    gap: .2rem;
+    padding: .15rem .45rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,.05);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-size: .68rem;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .card .card-body .reaction-mini button:hover:not([disabled]) {
+    background: rgba(56,189,248,.15);
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.08);
+  }
+  .card .card-body .reaction-mini button.active {
+    background: rgba(56,189,248,.2);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .card .card-body .reaction-mini button[disabled] {
+    opacity: .4;
+    cursor: not-allowed;
+  }
+  .card .card-body .reaction-mini button i { font-size: .7rem; }
+
+  .empty, .error {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+  }
+  .error h3 { color: #f87171; margin-bottom: .5rem; }
+  .error code {
+    background: var(--card);
+    padding: .1rem .4rem;
+    border-radius: 4px;
+    font-size: .85em;
+  }
+
+  .spinner {
+    width: 40px; height: 40px;
+    border: 4px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--muted);
+    font-size: .85rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .75rem 1.1rem;
+    background: var(--accent);
+    color: #0f172a;
+    border: none;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: .85rem;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(56,189,248,.5);
+    z-index: 100;
+    transition: transform .15s, filter .15s, opacity .2s;
+    font-family: inherit;
+  }
+  .fab:hover { transform: translateY(-3px); filter: brightness(1.1); }
+  .fab.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #22c55e;
+    color: #0f172a;
+    padding: .7rem 1.2rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: .85rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+    z-index: 9999;
+    box-shadow: 0 6px 20px rgba(34,197,94,.5);
+    max-width: 90%;
+    text-align: center;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .toast.error { background: #ef4444; color: #fff; box-shadow: 0 6px 20px rgba(239,68,68,.5); }
+  .toast.info { background: #38bdf8; color: #0f172a; }
+
+  @media (max-width: 600px) {
+    :root { --navbar-h: 52px; --kategori-h: 40px; }
+    .navbar { padding: 0 .75rem; }
+    .navbar .nav-logo i { font-size: 1.4rem; }
+    .navbar .nav-logo .logo-text .line-1 { font-size: .6rem; }
+    .navbar .nav-logo .logo-text .line-2 { font-size: 1rem; }
+    .navbar .nav-icon, .status-dot { width: 32px; height: 32px; font-size: .85rem; }
+    .kategori-bar { padding: .5rem .75rem; }
+    .kategori-item { font-size: .75rem; padding: .35rem .65rem; }
+    .search-wrap input { font-size: .9rem; padding: .75rem 2.8rem .75rem 2.6rem; }
+
+    .card .card-img { flex: 0 0 30%; max-width: 30%; }
+    .card .card-body { padding: .6rem 2.6rem .6rem .8rem; gap: .3rem; }
+    .card .card-body h3 { font-size: .88rem; }
+    .card .card-body .meta { font-size: .68rem; }
+    .card .card-body .stats-row { font-size: .68rem; gap: .6rem; }
+    .card .card-body .reaction-mini button { padding: .1rem .35rem; font-size: .62rem; }
+    .card .card-body .btn-bookmark { width: 28px; height: 28px; font-size: .75rem; top: .4rem; right: .4rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="navbar-wrap">
+  <nav class="navbar">
+    <a href="#" class="nav-logo" id="nav-logo-vercel" title="Portal Berita Termux">
+      <i class="fa-solid fa-newspaper"></i>
+      <span class="logo-text">
+        <span class="line-1">Portal Berita</span>
+        <span class="line-2">Termux</span>
+      </span>
+    </a>
+
+    <div class="nav-actions">
+      <div class="status-dot loading" id="status-dot" title="Menghubungkan...">
+        <i class="fa-solid fa-circle"></i>
+      </div>
+
+      <button class="nav-icon" id="nav-bookmark-btn" title="Baca Nanti">
+        <i class="fa-solid fa-bookmark"></i>
+        <span class="badge-count" id="bookmark-count" style="display:none">0</span>
+      </button>
+
+      <button class="nav-icon" id="nav-refresh" title="Refresh">
+        <i class="fa-solid fa-rotate-right"></i>
+      </button>
+
+      <a href="#" class="nav-icon" id="nav-top-btn" title="Ke Atas">
+        <i class="fa-solid fa-arrow-up"></i>
+      </a>
+
+      <button class="nav-icon" id="nav-search-btn-vercel" title="Cari Berita">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+    </div>
+  </nav>
+
+  <div class="kategori-bar" id="kategori-bar">
+    <a href="#" class="kategori-item active" data-kategori="">
+      <i class="fa-solid fa-house"></i> Semua
+    </a>
+  </div>
+</div>
+
+<main>
+  <div class="search-wrap" id="search-wrap">
+    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+    <input type="text" id="search" placeholder="Cari berita (judul atau isi konten)..." />
+    <button class="search-clear" id="search-clear" title="Bersihkan">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <div id="news-grid">
+    <div class="empty">
+      <div class="spinner"></div>
+      Memuat berita...
+    </div>
+  </div>
+</main>
+
+<footer>
+  &copy; 2026 Portal Berita Termux — Powered by Flask + Serveo + Vercel
+</footer>
+
+<button class="fab" id="fab-toggle" title="Tampilkan semua berita">
+  <span class="icon"><i class="fa-solid fa-chevron-down"></i></span>
+  <span class="text" id="fab-text">Lihat Semua</span>
+</button>
+
+<div class="toast" id="toast"></div>
+
+<script>
+window.ImageHelper = {
+  buildThumbnail: function (berita, API_BASE) {
+    let src = berita.gambar || "";
+    if (!src) {
+      src = "https://via.placeholder.com/200x200?text=No+Image";
+    } else if (src.startsWith("/")) {
+      src = API_BASE + src;
+    }
+    const judulEscaped = String(berita.judul || "").replace(/"/g, "&quot;");
+    return '<img src="' + src + '" alt="' + judulEscaped + '" loading="lazy" ' +
+           'onerror="this.src=\'https://via.placeholder.com/200x200?text=No+Image\'">';
+  }
+};
+
+const API_BASE = "https://news.serveousercontent.com";
+const BATAS_AWAL = 5;
+const BOOKMARK_KEY = "bookmark_berita";
+
+const ICON_KATEGORI = {
+  "Teknologi":   "fa-microchip",
+  "Sosial":      "fa-users",
+  "Lingkungan":  "fa-leaf",
+  "Kesehatan":   "fa-heart-pulse",
+  "Pendidikan":  "fa-graduation-cap",
+  "Ekonomi":     "fa-chart-line",
+  "Politik":     "fa-landmark",
+  "Olahraga":    "fa-futbol",
+  "Hiburan":     "fa-film",
+  "Tutorial":    "fa-book",
+  "Hewan":       "fa-paw",
+  "Umum":        "fa-circle-info",
+  "Budaya":      "fa-masks-theater",
+  "Sains":       "fa-flask"
+};
+
+const REACTION_ICONS = {
+  "like":  { icon: "fa-thumbs-up",      color: "#38bdf8" },
+  "love":  { icon: "fa-heart",          color: "#ef4444" },
+  "wow":   { icon: "fa-face-surprise",  color: "#f59e0b" },
+  "sad":   { icon: "fa-face-sad-tear",  color: "#94a3b8" },
+  "angry": { icon: "fa-face-angry",     color: "#f97316" }
+};
+
+let semuaBerita = [];
+let tampilSemua = false;
+let kategoriAktif = "";
+let hasilSearch = null;
+let searchTimeout = null;
+let modeBookmark = false;
+
+const grid = document.getElementById('news-grid');
+const statusDot = document.getElementById('status-dot');
+const searchInput = document.getElementById('search');
+const searchWrap = document.getElementById('search-wrap');
+const searchClear = document.getElementById('search-clear');
+const fabToggle = document.getElementById('fab-toggle');
+const fabText = document.getElementById('fab-text');
+const toast = document.getElementById('toast');
+const bookmarkCountEl = document.getElementById('bookmark-count');
+
+// ===== BOOKMARK HELPERS =====
+function getBookmarks() {
+  try {
+    return JSON.parse(localStorage.getItem(BOOKMARK_KEY) || "[]").map(Number);
+  } catch { return []; }
+}
+
+function sudahBookmark(id) {
+  return getBookmarks().includes(Number(id));
+}
+
+function toggleBookmark(id) {
+  id = Number(id);
+  let list = getBookmarks();
+  if (list.includes(id)) {
+    list = list.filter(x => x !== id);
+    tampilkanToast("🔖 Dihapus dari Baca Nanti");
+  } else {
+    list.push(id);
+    tampilkanToast("🔖 Disimpan ke Baca Nanti");
+  }
+  localStorage.setItem(BOOKMARK_KEY, JSON.stringify(list));
+  updateBookmarkCount();
+  renderBerita();
+}
+
+function updateBookmarkCount() {
+  const n = getBookmarks().length;
+  if (n > 0) {
+    bookmarkCountEl.textContent = n;
+    bookmarkCountEl.style.display = "inline-block";
+  } else {
+    bookmarkCountEl.style.display = "none";
+  }
+}
+
+function bukaBookmark() {
+  const list = getBookmarks();
+
+  if (!list.length) {
+    tampilkanToast("📭 Belum ada berita di Baca Nanti", true);
+    return;
+  }
+
+  // Toggle mode bookmark
+  if (modeBookmark) {
+    modeBookmark = false;
+    hasilSearch = null;
+    tampilSemua = false;
+    renderBerita();
+    tampilkanToast("📰 Kembali ke daftar berita", true);
+    return;
+  }
+
+  modeBookmark = true;
+  hasilSearch = null;
+  tampilSemua = true;
+  renderBerita();
+  scrollKeElemen(grid);
+  tampilkanToast(`🔖 ${list.length} berita di Baca Nanti`, true);
+}
+
+function tampilkanToast(teks, isError) {
+  toast.textContent = teks;
+  toast.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(function () { toast.className = 'toast'; }, 2500);
+}
+
+function scrollKeElemen(el) {
+  if (!el) return;
+  const navbarWrap = document.getElementById('navbar-wrap');
+  const offset = navbarWrap ? navbarWrap.offsetHeight : 100;
+  const top = el.getBoundingClientRect().top + window.pageYOffset - offset - 16;
+  window.scrollTo({ top: top, behavior: 'smooth' });
+}
+
+function setStatus(text, type) {
+  statusDot.className = 'status-dot ' + type;
+  statusDot.title = text;
+}
+
+function formatTanggal(str) {
+  try {
+    const d = new Date(str);
+    if (isNaN(d)) return str;
+    return d.toLocaleDateString('id-ID', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    });
+  } catch { return str; }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+async function ambilBerita() {
+  setStatus('Menghubungkan...', 'loading');
+  grid.innerHTML = `<div class="empty"><div class="spinner"></div>Memuat berita...</div>`;
+
+  try {
+    const res = await fetch(API_BASE + "/api/berita", { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const json = await res.json();
+    if (!json.sukses || !Array.isArray(json.data)) throw new Error("Format respons tidak valid");
+
+    semuaBerita = json.data.slice().sort((a, b) => (b.id || 0) - (a.id || 0));
+    hasilSearch = null;
+    modeBookmark = false;
+    setStatus(`Online — ${semuaBerita.length} berita`, 'online');
+    updateBookmarkCount();
+    renderBerita();
+  } catch (err) {
+    console.error(err);
+    setStatus('Server offline', 'offline');
+    grid.innerHTML = `
+      <div class="error">
+        <h3><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat berita</h3>
+        <p>${escapeHtml(err.message)}</p>
+        <p style="margin-top:.5rem;font-size:.85rem">
+          Pastikan <code>api.py</code> dan tunnel Serveo masih berjalan.
+        </p>
+      </div>`;
+    fabToggle.classList.add('hidden');
+  }
+}
+
+async function jalankanSearch(q) {
+  if (!q) {
+    hasilSearch = null;
+    renderBerita();
+    return;
+  }
+
+  try {
+    const res = await fetch(API_BASE + "/api/search?q=" + encodeURIComponent(q), { cache: "no-store" });
+    const json = await res.json();
+    if (json.sukses) {
+      hasilSearch = json.data || [];
+      renderBerita();
+    }
+  } catch (e) {
+    console.error("Search error:", e);
+    tampilkanToast("Gagal mencari", true);
+  }
+}
+
+function dapatkanFiltered() {
+  // Mode bookmark
+  if (modeBookmark) {
+    const list = getBookmarks();
+    return semuaBerita.filter(b => list.includes(Number(b.id)));
+  }
+
+  if (hasilSearch !== null) {
+    return hasilSearch.filter(b => {
+      const cocokKat = !kategoriAktif || b.kategori === kategoriAktif;
+      return cocokKat;
+    });
+  }
+  return semuaBerita.filter(b => {
+    const cocokKat = !kategoriAktif || b.kategori === kategoriAktif;
+    return cocokKat;
+  });
+}
+
+function hitungTotalReaksi(reactions) {
+  if (!reactions) return 0;
+  return Object.keys(reactions).reduce((a, k) => a + (reactions[k] || 0), 0);
+}
+
+function renderReactionMini(berita) {
+  const reactions = berita.reactions || {};
+  const sudahReaksi = localStorage.getItem("reaction_" + berita.id);
+
+  return `
+    <div class="reaction-mini" data-id="${berita.id}">
+      ${Object.keys(REACTION_ICONS).map(function (tipe) {
+        const r = REACTION_ICONS[tipe];
+        const jumlah = reactions[tipe] || 0;
+        const aktif = (sudahReaksi === tipe) ? "active" : "";
+        const disabled = sudahReaksi ? "disabled" : "";
+        return `
+          <button class="reaction-mini-btn ${aktif}"
+                  data-id="${berita.id}"
+                  data-tipe="${tipe}"
+                  title="${tipe}"
+                  style="--warna: ${r.color}"
+                  ${disabled}>
+            <i class="fa-solid ${r.icon}"></i>
+            <span>${jumlah}</span>
+          </button>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderBerita() {
+  const list = dapatkanFiltered();
+
+  if (!list.length) {
+    let pesan = "Tidak ada berita.";
+    if (modeBookmark) pesan = "📭 Belum ada berita di Baca Nanti.";
+    else if (hasilSearch !== null) pesan = "Tidak ada berita yang cocok dengan pencarian.";
+    grid.innerHTML = `<div class="empty">${pesan}</div>`;
+    fabToggle.classList.add('hidden');
+    return;
+  }
+
+  const tampil = tampilSemua ? list : list.slice(0, BATAS_AWAL);
+  const asalUrl = encodeURIComponent(window.location.origin);
+
+  grid.innerHTML = tampil.map(b => {
+    const gambar = ImageHelper.buildThumbnail(b, API_BASE);
+    const totalReaksi = hitungTotalReaksi(b.reactions);
+    const bookmarked = sudahBookmark(b.id);
+
+    return `
+      <a class="card"
+         href="${API_BASE}/web/berita/${b.id}?from=${asalUrl}"
+         target="_blank">
+        <div class="card-img">${gambar}</div>
+        <div class="card-body">
+          <button class="btn-bookmark ${bookmarked ? 'active' : ''}"
+                  data-id="${b.id}"
+                  title="${bookmarked ? 'Hapus dari Baca Nanti' : 'Simpan ke Baca Nanti'}">
+            <i class="fa-${bookmarked ? 'solid' : 'regular'} fa-bookmark"></i>
+          </button>
+          <span class="badge">${escapeHtml(b.kategori || 'Umum')}</span>
+          <h3>${escapeHtml(b.judul)}</h3>
+          ${b.snippet ? `<div class="snippet">${escapeHtml(b.snippet)}</div>` : ''}
+          <div class="meta">
+            <i class="fa-solid fa-pen-nib"></i>
+            <span class="penulis">${escapeHtml(b.penulis || 'Anonim')}</span>
+            <span class="dot">•</span>
+            <i class="fa-solid fa-calendar"></i>
+            <span>${formatTanggal(b.tanggal)}</span>
+          </div>
+          <div class="stats-row">
+            <div class="stat views">
+              <i class="fa-solid fa-eye"></i>
+              <span>${b.views || 0}</span>
+            </div>
+            <div class="stat reactions">
+              <i class="fa-solid fa-face-smile"></i>
+              <span>${totalReaksi}</span>
+            </div>
+          </div>
+          ${renderReactionMini(b)}
+        </div>
+      </a>`;
+  }).join('');
+
+  // Event reaction
+  document.querySelectorAll(".reaction-mini-btn").forEach(function (btn) {
+    btn.addEventListener("click", async function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const id = btn.dataset.id;
+      const tipe = btn.dataset.tipe;
+      const keyBerita = "reaction_" + id;
+
+      if (localStorage.getItem(keyBerita)) {
+        tampilkanToast("❌ Anda sudah memberi reaksi untuk berita ini", true);
+        return;
+      }
+
+      try {
+        const res = await fetch(API_BASE + "/api/reaction/" + id + "?tipe=" + tipe, {
+          method: "POST"
+        });
+        const json = await res.json();
+
+        if (json.sukses) {
+          localStorage.setItem(keyBerita, tipe);
+          btn.querySelector("span").textContent = json.data[tipe];
+          btn.classList.add("active");
+
+          const card = btn.closest(".card");
+          const totalReaksi = hitungTotalReaksi(json.data);
+          const statReaksi = card.querySelector(".stat.reactions span");
+          if (statReaksi) statReaksi.textContent = totalReaksi;
+
+          card.querySelectorAll(".reaction-mini-btn").forEach(function (b) {
+            b.setAttribute("disabled", "disabled");
+          });
+
+          tampilkanToast("✅ Reaksi terkirim");
+
+        } else if (res.status === 429) {
+          tampilkanToast(json.pesan || "❌ Sudah reaksi", true);
+          if (json.sudah) {
+            localStorage.setItem(keyBerita, json.sudah);
+            const card = btn.closest(".card");
+            if (card) {
+              card.querySelectorAll(".reaction-mini-btn").forEach(function (b) {
+                b.setAttribute("disabled", "disabled");
+              });
+            }
+          }
+        } else {
+          tampilkanToast(json.pesan || "Gagal kirim reaksi", true);
+        }
+      } catch (err) {
+        console.error("Reaction error:", err);
+        tampilkanToast("Gagal kirim reaksi", true);
+      }
+    });
+  });
+
+  // Event bookmark
+  document.querySelectorAll(".btn-bookmark").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleBookmark(btn.dataset.id);
+    });
+  });
+
+  updateFab(list.length);
+}
+
+function updateFab(total) {
+  if (total <= BATAS_AWAL) {
+    fabToggle.classList.add('hidden');
+    return;
+  }
+  fabToggle.classList.remove('hidden');
+
+  if (tampilSemua) {
+    fabToggle.querySelector('.icon').innerHTML = '<i class="fa-solid fa-chevron-up"></i>';
+    fabText.textContent = `Ringkas (${BATAS_AWAL})`;
+  } else {
+    fabToggle.querySelector('.icon').innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
+    fabText.textContent = `Lihat Semua (${total})`;
+  }
+}
+
+fabToggle.addEventListener('click', function () {
+  tampilSemua = !tampilSemua;
+  renderBerita();
+
+  if (tampilSemua) {
+    setTimeout(function () {
+      const cards = document.querySelectorAll('.card');
+      if (cards.length > BATAS_AWAL) scrollKeElemen(cards[BATAS_AWAL]);
+    }, 100);
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+});
+
+if (searchInput) {
+  searchInput.addEventListener('input', function () {
+    tampilSemua = false;
+    modeBookmark = false;
+    const q = searchInput.value.trim();
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(function () {
+      jalankanSearch(q);
+    }, 300);
+  });
+}
+
+if (searchClear) {
+  searchClear.addEventListener('click', function () {
+    searchInput.value = "";
+    hasilSearch = null;
+    modeBookmark = false;
+    tampilSemua = false;
+    renderBerita();
+    searchInput.focus();
+  });
+}
+
+async function loadKategoriVercel() {
+  const bar = document.getElementById("kategori-bar");
+  if (!bar) return;
+
+  let kategori = [];
+  try {
+    const res = await fetch(API_BASE + "/api/kategori", { cache: "no-store" });
+    const json = await res.json();
+    if (json.sukses && Array.isArray(json.data)) kategori = json.data;
+  } catch (e) {
+    console.log("[Vercel] Gagal load kategori:", e);
+  }
+
+  if (!kategori.length) {
+    kategori = ["Teknologi","Sosial","Lingkungan","Kesehatan","Pendidikan",
+                "Ekonomi","Politik","Olahraga","Hiburan","Tutorial","Hewan","Umum"];
+  }
+
+  kategori.forEach(function (k) {
+    const a = document.createElement("a");
+    a.href = "#";
+    a.className = "kategori-item";
+    a.dataset.kategori = k;
+
+    const ikon = ICON_KATEGORI[k] || "fa-tag";
+    a.innerHTML = `<i class="fa-solid ${ikon}"></i> ${k}`;
+
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      kategoriAktif = k;
+      tampilSemua = false;
+      modeBookmark = false;
+      hasilSearch = null;
+      renderBerita();
+
+      document.querySelectorAll("#kategori-bar .kategori-item").forEach(function (el) {
+        el.classList.remove("active");
+      });
+      a.classList.add("active");
+      scrollKeElemen(grid);
+    });
+
+    bar.appendChild(a);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const semua = document.querySelector('#kategori-bar [data-kategori=""]');
+  if (semua) {
+    semua.addEventListener("click", function (e) {
+      e.preventDefault();
+      kategoriAktif = "";
+      tampilSemua = false;
+      modeBookmark = false;
+      hasilSearch = null;
+      renderBerita();
+      document.querySelectorAll("#kategori-bar .kategori-item").forEach(function (el) {
+        el.classList.remove("active");
+      });
+      semua.classList.add("active");
+      scrollKeElemen(grid);
+    });
+  }
+
+  // Bookmark button di navbar
+  const btnBookmark = document.getElementById("nav-bookmark-btn");
+  if (btnBookmark) {
+    btnBookmark.addEventListener("click", bukaBookmark);
+  }
+
+  const btnRefresh = document.getElementById("nav-refresh");
+  if (btnRefresh) {
+    btnRefresh.addEventListener("click", function () {
+      tampilSemua = false;
+      hasilSearch = null;
+      modeBookmark = false;
+      if (searchInput) searchInput.value = "";
+      ambilBerita();
+    });
+  }
+
+  const btnTop = document.getElementById("nav-top-btn");
+  if (btnTop) {
+    btnTop.addEventListener("click", function (e) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  const btnSearch = document.getElementById("nav-search-btn-vercel");
+  if (btnSearch) {
+    btnSearch.addEventListener("click", function () {
+      const aktif = searchWrap.classList.contains("show");
+      if (aktif) {
+        searchWrap.classList.remove("show");
+        searchInput.value = "";
+        hasilSearch = null;
+        renderBerita();
+      } else {
+        searchWrap.classList.add("show");
+        scrollKeElemen(searchWrap);
+        setTimeout(function () { searchInput.focus(); }, 300);
+      }
+    });
+  }
+
+  const logo = document.getElementById("nav-logo-vercel");
+  if (logo) {
+    logo.addEventListener("click", function (e) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  loadKategoriVercel();
+  updateBookmarkCount();
+});
+
+ambilBerita();
+</script>
+
+</body>
+</html>
