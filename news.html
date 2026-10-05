@@ -529,6 +529,16 @@
   .toast.error { background: #ef4444; color: #fff; box-shadow: 0 6px 20px rgba(239,68,68,.5); }
   .toast.info { background: #38bdf8; color: #0f172a; }
 
+  /* Watchdog overlay */
+  .watchdog-overlay {
+    position: fixed; inset: 0; background: #0a0f1e; color: #e2e8f0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 99999; font-family: sans-serif; text-align: center; padding: 2rem;
+  }
+  .watchdog-overlay .ico { font-size: 3rem; margin-bottom: 1rem; }
+  .watchdog-overlay h2 { margin-bottom: .5rem; }
+  .watchdog-overlay p { color: #94a3b8; font-size: .9rem; }
+
   @media (max-width: 600px) {
     :root { --navbar-h: 52px; --kategori-h: 40px; }
     .navbar { padding: 0 .75rem; }
@@ -726,7 +736,6 @@ function bukaBookmark() {
     return;
   }
 
-  // Toggle mode bookmark
   if (modeBookmark) {
     modeBookmark = false;
     hasilSearch = null;
@@ -831,7 +840,6 @@ async function jalankanSearch(q) {
 }
 
 function dapatkanFiltered() {
-  // Mode bookmark
   if (modeBookmark) {
     const list = getBookmarks();
     return semuaBerita.filter(b => list.includes(Number(b.id)));
@@ -937,7 +945,6 @@ function renderBerita() {
       </a>`;
   }).join('');
 
-  // Event reaction
   document.querySelectorAll(".reaction-mini-btn").forEach(function (btn) {
     btn.addEventListener("click", async function (e) {
       e.preventDefault();
@@ -995,7 +1002,6 @@ function renderBerita() {
     });
   });
 
-  // Event bookmark
   document.querySelectorAll(".btn-bookmark").forEach(function (btn) {
     btn.addEventListener("click", function (e) {
       e.preventDefault();
@@ -1124,7 +1130,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Bookmark button di navbar
   const btnBookmark = document.getElementById("nav-bookmark-btn");
   if (btnBookmark) {
     btnBookmark.addEventListener("click", bukaBookmark);
@@ -1179,6 +1184,64 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 ambilBerita();
+
+// ===== API WATCHDOG =====
+// Kalau API mati 2x berturut-turut → balik ke index.html
+(function () {
+  var CHECK_INTERVAL = 15000;
+  var MAX_FAIL = 2;
+  var failCount = 0;
+  var redirecting = false;
+
+  function balikKeGateway() {
+    if (redirecting) return;
+    redirecting = true;
+    sessionStorage.setItem("balik_dari_disconnect", "1");
+    sessionStorage.removeItem("active_service");
+
+    var ov = document.createElement("div");
+    ov.className = "watchdog-overlay";
+    ov.innerHTML =
+      '<div class="ico">⚠️</div>' +
+      '<h2>Koneksi ke server terputus</h2>' +
+      '<p>Mengalihkan kembali ke halaman utama...</p>';
+    document.body.appendChild(ov);
+
+    setTimeout(function () {
+      window.location.replace("./index.html");
+    }, 1500);
+  }
+
+  function cekApi() {
+    if (redirecting) return;
+    var ctrl = new AbortController();
+    var t = setTimeout(function () { ctrl.abort(); }, 6000);
+    fetch(API_BASE + "/api/berita", {
+      method: "GET",
+      cache: "no-store",
+      signal: ctrl.signal
+    })
+      .then(function (res) {
+        clearTimeout(t);
+        if (res.ok) {
+          failCount = 0;
+        } else {
+          failCount++;
+          if (failCount >= MAX_FAIL) balikKeGateway();
+        }
+      })
+      .catch(function () {
+        clearTimeout(t);
+        failCount++;
+        if (failCount >= MAX_FAIL) balikKeGateway();
+      });
+  }
+
+  setTimeout(function () {
+    cekApi();
+    setInterval(cekApi, CHECK_INTERVAL);
+  }, 5000);
+})();
 </script>
 
 </body>
