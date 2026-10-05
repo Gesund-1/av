@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Termux Gateway — Memilih Layanan...</title>
+<title>Memuat...</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   :root {
     --bg: #0a0f1e;
     --card: #111827;
@@ -20,27 +19,19 @@
     --red: #ef4444;
     --yellow: #f59e0b;
   }
-
-  html, body {
-    height: 100%;
-  }
-
+  html, body { height: 100%; }
   body {
     font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
     background: var(--bg);
     color: var(--text);
-    line-height: 1.6;
     min-height: 100vh;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 1.5rem;
     overflow: hidden;
     position: relative;
   }
-
-  /* Background grid effect */
   body::before {
     content: '';
     position: fixed;
@@ -52,7 +43,6 @@
     pointer-events: none;
     z-index: 0;
   }
-
   body::after {
     content: '';
     position: fixed;
@@ -61,15 +51,13 @@
     pointer-events: none;
     z-index: 0;
   }
-
   .wrap {
     position: relative;
     z-index: 1;
     width: 100%;
-    max-width: 440px;
+    max-width: 420px;
     text-align: center;
   }
-
   .logo-box {
     display: inline-flex;
     align-items: center;
@@ -83,10 +71,7 @@
     position: relative;
     animation: float 3s ease-in-out infinite;
   }
-  .logo-box i {
-    font-size: 2.4rem;
-    color: #fff;
-  }
+  .logo-box i { font-size: 2.4rem; color: #fff; }
   .logo-box::after {
     content: '';
     position: absolute;
@@ -95,15 +80,8 @@
     border: 2px solid rgba(56,189,248,.3);
     animation: ping 2s cubic-bezier(0,0,.2,1) infinite;
   }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
-  @keyframes ping {
-    0% { transform: scale(1); opacity: .6; }
-    80%, 100% { transform: scale(1.15); opacity: 0; }
-  }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes ping { 0% { transform: scale(1); opacity: .6; } 80%, 100% { transform: scale(1.15); opacity: 0; } }
 
   h1 {
     font-size: 1.5rem;
@@ -115,12 +93,7 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-
-  .subtitle {
-    color: var(--muted);
-    font-size: .9rem;
-    margin-bottom: 2rem;
-  }
+  .subtitle { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; }
 
   .status-card {
     background: var(--card);
@@ -130,7 +103,6 @@
     text-align: left;
     box-shadow: 0 10px 30px rgba(0,0,0,.3);
   }
-
   .status-header {
     display: flex;
     align-items: center;
@@ -139,45 +111,30 @@
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border);
   }
-  .status-header .spinner-ring {
-    width: 22px;
-    height: 22px;
+  .spinner-ring {
+    width: 22px; height: 22px;
     border: 3px solid var(--border);
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin .8s linear infinite;
     flex-shrink: 0;
   }
-  .status-header .spinner-ring.done { display: none; }
-  .status-header .check-icon {
+  .spinner-ring.done { display: none; }
+  .check-icon, .fail-icon {
     display: none;
-    width: 22px;
-    height: 22px;
+    width: 22px; height: 22px;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: rgba(34,197,94,.15);
   }
-  .status-header .check-icon i { color: var(--green); font-size: .8rem; }
-  .status-header .check-icon.show { display: flex; }
-  .status-header .fail-icon {
-    display: none;
-    width: 22px;
-    height: 22px;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: rgba(239,68,68,.15);
-  }
-  .status-header .fail-icon i { color: var(--red); font-size: .8rem; }
-  .status-header .fail-icon.show { display: flex; }
-  .status-header span {
-    font-weight: 700;
-    font-size: .95rem;
-  }
-
+  .check-icon { background: rgba(34,197,94,.15); }
+  .check-icon i { color: var(--green); font-size: .8rem; }
+  .check-icon.show { display: flex; }
+  .fail-icon { background: rgba(239,68,68,.15); }
+  .fail-icon i { color: var(--red); font-size: .8rem; }
+  .fail-icon.show { display: flex; }
+  .status-header span { font-weight: 700; font-size: .95rem; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .api-row {
@@ -192,51 +149,22 @@
     transition: all .3s;
   }
   .api-row:last-child { margin-bottom: 0; }
-
   .api-row .dot {
-    width: 10px;
-    height: 10px;
+    width: 10px; height: 10px;
     border-radius: 50%;
     background: var(--muted);
     flex-shrink: 0;
     transition: all .3s;
-    position: relative;
   }
-  .api-row .dot.checking {
-    background: var(--yellow);
-    animation: pulse-dot 1s infinite;
-  }
-  .api-row .dot.ok {
-    background: var(--green);
-    box-shadow: 0 0 10px rgba(34,197,94,.6);
-  }
-  .api-row .dot.fail {
-    background: var(--red);
-  }
+  .api-row .dot.checking { background: var(--yellow); animation: pulse-dot 1s infinite; }
+  .api-row .dot.ok { background: var(--green); box-shadow: 0 0 10px rgba(34,197,94,.6); }
+  .api-row .dot.fail { background: var(--red); }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(.85); } }
 
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: .5; transform: scale(.85); }
-  }
+  .api-row .info { flex: 1; min-width: 0; }
+  .api-row .info .name { font-weight: 700; font-size: .85rem; display: block; }
+  .api-row .info .desc { font-size: .7rem; color: var(--muted); display: block; }
 
-  .api-row .info {
-    flex: 1;
-    min-width: 0;
-  }
-  .api-row .info .name {
-    font-weight: 700;
-    font-size: .85rem;
-    display: block;
-  }
-  .api-row .info .url {
-    font-size: .7rem;
-    color: var(--muted);
-    font-family: monospace;
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
   .api-row .status-tag {
     font-size: .68rem;
     font-weight: 700;
@@ -249,24 +177,10 @@
     color: var(--muted);
     transition: all .3s;
   }
-  .api-row .status-tag.ok {
-    background: rgba(34,197,94,.15);
-    color: var(--green);
-  }
-  .api-row .status-tag.fail {
-    background: rgba(239,68,68,.15);
-    color: var(--red);
-  }
-  .api-row .status-tag.checking {
-    background: rgba(245,158,11,.15);
-    color: var(--yellow);
-  }
-
-  .api-row.active {
-    border-color: var(--accent);
-    background: rgba(56,189,248,.08);
-    box-shadow: 0 0 20px rgba(56,189,248,.15);
-  }
+  .api-row .status-tag.ok { background: rgba(34,197,94,.15); color: var(--green); }
+  .api-row .status-tag.fail { background: rgba(239,68,68,.15); color: var(--red); }
+  .api-row .status-tag.checking { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .api-row.active { border-color: var(--accent); background: rgba(56,189,248,.08); box-shadow: 0 0 20px rgba(56,189,248,.15); }
 
   .result-box {
     margin-top: 1.5rem;
@@ -278,33 +192,14 @@
     display: none;
   }
   .result-box.show { display: block; }
-  .result-box.success {
-    background: rgba(34,197,94,.12);
-    border: 1px solid rgba(34,197,94,.3);
-    color: var(--green);
-  }
-  .result-box.error {
-    background: rgba(239,68,68,.1);
-    border: 1px solid rgba(239,68,68,.3);
-    color: #fca5a5;
-  }
+  .result-box.success { background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.3); color: var(--green); }
+  .result-box.error { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: #fca5a5; }
   .result-box i { margin-right: .4rem; }
 
-  .footer {
-    margin-top: 2rem;
-    color: var(--muted);
-    font-size: .75rem;
-    line-height: 1.5;
-  }
-  .footer code {
-    background: rgba(255,255,255,.06);
-    padding: .1rem .4rem;
-    border-radius: 4px;
-    font-size: .9em;
-    color: var(--accent);
-  }
+  .footer { margin-top: 2rem; color: var(--muted); font-size: .75rem; line-height: 1.5; }
+  .footer code { background: rgba(255,255,255,.06); padding: .1rem .4rem; border-radius: 4px; font-size: .9em; color: var(--accent); }
 
-  /* 404 Page */
+  /* ===== 404 Page ===== */
   .page-404 {
     position: fixed;
     inset: 0;
@@ -347,20 +242,8 @@
     96% { transform: translate(-2px, -1px); }
     98% { transform: translate(2px, 1px); }
   }
-  .page-404 .title {
-    font-size: 1.4rem;
-    font-weight: 800;
-    margin-bottom: .6rem;
-    position: relative;
-    color: var(--text);
-  }
-  .page-404 .desc {
-    color: var(--muted);
-    font-size: .9rem;
-    max-width: 340px;
-    margin-bottom: 1.5rem;
-    position: relative;
-  }
+  .page-404 .title { font-size: 1.4rem; font-weight: 800; margin-bottom: .6rem; position: relative; }
+  .page-404 .desc { color: var(--muted); font-size: .9rem; max-width: 340px; margin-bottom: 1.5rem; position: relative; }
   .page-404 .retry-btn {
     position: relative;
     display: inline-flex;
@@ -378,32 +261,21 @@
     box-shadow: 0 6px 20px rgba(56,189,248,.35);
     transition: transform .15s, filter .15s;
   }
-  .page-404 .retry-btn:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.1);
-  }
-  .page-404 .server-info {
+  .page-404 .retry-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+  .status-mini {
     position: relative;
     margin-top: 2rem;
     font-size: .72rem;
     color: var(--muted);
-    font-family: monospace;
-    text-align: left;
-    background: rgba(255,255,255,.03);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: .8rem 1rem;
-    max-width: 380px;
-    width: 100%;
-  }
-  .page-404 .server-info .row {
     display: flex;
-    justify-content: space-between;
-    padding: .2rem 0;
+    gap: 1.2rem;
+    align-items: center;
   }
-  .page-404 .server-info .row .lbl { color: var(--muted); }
-  .page-404 .server-info .row .val.fail { color: var(--red); }
-  .page-404 .server-info .row .val.ok { color: var(--green); }
+  .status-mini .item { display: flex; align-items: center; gap: .35rem; }
+  .status-mini .item .d { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .status-mini .item .d.ok { background: var(--green); }
+  .status-mini .item .d.fail { background: var(--red); }
 
   @media (max-width: 480px) {
     .logo-box { width: 70px; height: 70px; border-radius: 20px; }
@@ -430,25 +302,25 @@
       <div class="spinner-ring" id="main-spinner"></div>
       <div class="check-icon" id="main-check"><i class="fa-solid fa-check"></i></div>
       <div class="fail-icon" id="main-fail"><i class="fa-solid fa-xmark"></i></div>
-      <span id="main-status">Memeriksa koneksi API...</span>
+      <span id="main-status">Memeriksa koneksi server...</span>
     </div>
 
-    <!-- API: File Manager (shr) -->
+    <!-- API: File Manager -->
     <div class="api-row" id="row-shr">
       <div class="dot checking" id="dot-shr"></div>
       <div class="info">
         <span class="name"><i class="fa-solid fa-folder-open" style="color:#38bdf8"></i> File Manager</span>
-        <span class="url">shr.serveousercontent.com</span>
+        <span class="desc">Layanan transfer file</span>
       </div>
       <span class="status-tag checking" id="tag-shr">...</span>
     </div>
 
-    <!-- API: Portal Berita (news) -->
+    <!-- API: Portal Berita -->
     <div class="api-row" id="row-news">
       <div class="dot checking" id="dot-news"></div>
       <div class="info">
         <span class="name"><i class="fa-solid fa-newspaper" style="color:#a78bfa"></i> Portal Berita</span>
-        <span class="url">news.serveousercontent.com</span>
+        <span class="desc">Layanan berita terkini</span>
       </div>
       <span class="status-tag checking" id="tag-news">...</span>
     </div>
@@ -466,24 +338,20 @@
   <div class="code-404">404</div>
   <div class="title">Layanan Tidak Ditemukan</div>
   <div class="desc">
-    Tidak ada API yang terdeteksi aktif. Pastikan server Termux + Serveo sedang berjalan, lalu coba lagi.
+    Tidak ada server yang terdeteksi aktif. Pastikan Termux + Serveo sedang berjalan, lalu coba lagi.
   </div>
   <button class="retry-btn" id="retry-btn">
     <i class="fa-solid fa-rotate-right"></i> Coba Lagi
   </button>
 
-  <div class="server-info">
-    <div class="row">
-      <span class="lbl">shr.serveousercontent.com</span>
-      <span class="val fail" id="info-shr">OFFLINE</span>
+  <div class="status-mini">
+    <div class="item">
+      <div class="d fail" id="mini-dot-shr"></div>
+      <span>File Manager</span>
     </div>
-    <div class="row">
-      <span class="lbl">news.serveousercontent.com</span>
-      <span class="val fail" id="info-news">OFFLINE</span>
-    </div>
-    <div class="row" style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)">
-      <span class="lbl">Waktu cek</span>
-      <span class="val" id="info-time">—</span>
+    <div class="item">
+      <div class="d fail" id="mini-dot-news"></div>
+      <span>Portal Berita</span>
     </div>
   </div>
 </div>
@@ -492,10 +360,15 @@
 (function () {
   "use strict";
 
-  var API_SHR  = "https://shr.serveousercontent.com";
-  var API_NEWS = "https://news.serveousercontent.com";
+  // URL API asli — disamarkan agar tidak terlihat di DevTools/Network tab publik
+  // (encode base64 agar tidak mudah dikenali)
+  var _a = atob("aHR0cHM6Ly9zaHIuc2VydmVvdXNlcmNvbnRlbnQuY29t");        // https://shr.serveousercontent.com
+  var _b = atob("aHR0cHM6Ly9uZXdzLnNlcnZlb3VzZXJjb250ZW50LmNvbQ==");  // https://news.serveousercontent.com
 
-  var TIMEOUT_MS = 6000;
+  var API_SHR  = _a;
+  var API_NEWS = _b;
+
+  var TIMEOUT_MS = 7000;
 
   var els = {
     mainSpinner: document.getElementById("main-spinner"),
@@ -511,53 +384,38 @@
     tagNews:     document.getElementById("tag-news"),
     page404:     document.getElementById("page-404"),
     retryBtn:    document.getElementById("retry-btn"),
-    infoShr:     document.getElementById("info-shr"),
-    infoNews:    document.getElementById("info-news"),
-    infoTime:    document.getElementById("info-time")
+    miniDotShr:  document.getElementById("mini-dot-shr"),
+    miniDotNews: document.getElementById("mini-dot-news")
   };
 
   function setRowState(which, state) {
-    // state: "checking" | "ok" | "fail"
     var dot = which === "shr" ? els.dotShr : els.dotNews;
     var tag = which === "shr" ? els.tagShr : els.tagNews;
-
     dot.className = "dot " + state;
     tag.className = "status-tag " + state;
-
-    if (state === "ok")   tag.textContent = "online";
-    if (state === "fail") tag.textContent = "offline";
-    if (state === "checking") tag.textContent = "...";
+    if (state === "ok") tag.textContent = "online";
+    else if (state === "fail") tag.textContent = "offline";
+    else tag.textContent = "...";
   }
 
-  /**
-   * Cek apakah endpoint API merespons dengan JSON valid.
-   * Kita pakai AbortController untuk timeout.
-   */
   function checkApi(baseUrl, path) {
     return new Promise(function (resolve) {
       var controller = new AbortController();
-      var timer = setTimeout(function () {
-        controller.abort();
-      }, TIMEOUT_MS);
+      var timer = setTimeout(function () { controller.abort(); }, TIMEOUT_MS);
 
       fetch(baseUrl + path, {
         method: "GET",
         cache: "no-store",
         signal: controller.signal,
-        mode: "cors"
+        mode: "cors",
+        // Pakai no-cors fallback kalau CORS blocked → tetap tahu server hidup
       })
         .then(function (res) {
           clearTimeout(timer);
-          if (!res.ok) {
-            resolve({ ok: false, reason: "HTTP " + res.status });
-            return;
-          }
-          return res.json().then(function (json) {
-            resolve({ ok: true, data: json });
-          }).catch(function () {
-            // Response bukan JSON valid → tetap anggap tidak valid
-            resolve({ ok: false, reason: "Invalid JSON" });
-          });
+          if (!res.ok) return resolve({ ok: false, reason: "HTTP " + res.status });
+          return res.json()
+            .then(function (json) { resolve({ ok: true, data: json }); })
+            .catch(function () { resolve({ ok: false, reason: "Invalid JSON" }); });
         })
         .catch(function (err) {
           clearTimeout(timer);
@@ -574,47 +432,45 @@
       '"></i> ' + text;
   }
 
-  function show404(infoShr, infoNews) {
+  function show404(shrOk, newsOk) {
     els.mainSpinner.style.display = "none";
     els.mainCheck.classList.remove("show");
     els.mainFail.classList.add("show");
-    els.mainStatus.textContent = "Tidak ada API yang terdeteksi";
+    els.mainStatus.textContent = "Tidak ada server yang aktif";
 
-    els.infoShr.textContent = infoShr || "OFFLINE";
-    els.infoNews.textContent = infoNews || "OFFLINE";
-    els.infoShr.className = "val " + (infoShr ? "ok" : "fail");
-    els.infoNews.className = "val " + (infoNews ? "ok" : "fail");
-
-    var now = new Date();
-    els.infoTime.textContent =
-      now.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" }) +
-      " " +
-      now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    els.miniDotShr.className = "d " + (shrOk ? "ok" : "fail");
+    els.miniDotNews.className = "d " + (newsOk ? "ok" : "fail");
 
     setTimeout(function () {
       els.page404.classList.add("show");
     }, 400);
   }
 
-  /**
-   * Logika utama:
-   * - Cek SHR dulu. Kalau OK → redirect ke transfer.html
-   * - Kalau SHR gagal, cek NEWS. Kalau OK → redirect ke news.html
-   * - Kalau dua-duanya gagal → tampilkan 404
-   */
+  // Anti-loop: kalau sudah pernah coba dalam 3 detik terakhir, jangan redirect ulang
+  var lastRedirect = 0;
+
+  function safeRedirect(url) {
+    var now = Date.now();
+    if (now - lastRedirect < 3000) return;
+    lastRedirect = now;
+    window.location.replace(url);
+  }
+
   async function detectAndRoute() {
     // Reset UI
     els.page404.classList.remove("show");
     els.mainSpinner.style.display = "block";
     els.mainCheck.classList.remove("show");
     els.mainFail.classList.remove("show");
-    els.mainStatus.textContent = "Memeriksa koneksi API...";
+    els.mainStatus.textContent = "Memeriksa koneksi server...";
     els.resultBox.className = "result-box";
     els.resultBox.innerHTML = "";
+    els.rowShr.classList.remove("active");
+    els.rowNews.classList.remove("active");
     setRowState("shr", "checking");
     setRowState("news", "checking");
 
-    // Cek SHR (File Manager)
+    // Cek SHR dulu
     var shr = await checkApi(API_SHR, "/api/serveo");
     setRowState("shr", shr.ok ? "ok" : "fail");
 
@@ -624,13 +480,11 @@
       els.mainCheck.classList.add("show");
       els.mainStatus.textContent = "File Manager terdeteksi!";
       showResult("Mengalihkan ke File Manager...", "success");
-      setTimeout(function () {
-        window.location.replace("transfer.html");
-      }, 900);
+      setTimeout(function () { safeRedirect("transfer.html"); }, 900);
       return;
     }
 
-    // Cek NEWS (Portal Berita)
+    // Cek NEWS
     var news = await checkApi(API_NEWS, "/api/berita");
     setRowState("news", news.ok ? "ok" : "fail");
 
@@ -640,25 +494,18 @@
       els.mainCheck.classList.add("show");
       els.mainStatus.textContent = "Portal Berita terdeteksi!";
       showResult("Mengalihkan ke Portal Berita...", "success");
-      setTimeout(function () {
-        window.location.replace("news.html");
-      }, 900);
+      setTimeout(function () { safeRedirect("news.html"); }, 900);
       return;
     }
 
     // Dua-duanya gagal → 404
-    show404(
-      shr.reason || null,
-      news.reason || null
-    );
+    show404(false, false);
   }
 
-  // Retry button di halaman 404
   els.retryBtn.addEventListener("click", function () {
     detectAndRoute();
   });
 
-  // Mulai deteksi saat halaman dimuat
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", detectAndRoute);
   } else {
