@@ -33,6 +33,12 @@
         .toast.error { background: #e53935; }
         .toast.success { background: #43a047; }
         .footer { text-align: center; margin-top: 30px; color: #888; font-size: .8em; }
+        .watchdog-overlay { position: fixed; inset: 0; background: #0a0f1e; color: #e2e8f0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 99999; font-family: sans-serif; text-align: center; padding: 2rem; }
+        .watchdog-overlay .ico { font-size: 3rem; margin-bottom: 1rem; }
+        .watchdog-overlay h2 { margin-bottom: .5rem; color: #fff; }
+        .watchdog-overlay p { color: #94a3b8; font-size: .9rem; }
         @media (max-width: 600px) { .drop-zone { padding: 20px; } table { font-size: 14px; } td, th { padding: 8px; } }
     </style>
 </head>
@@ -41,7 +47,6 @@
 
     <div class="banner">
         <h3>&#128279; API Server (Serveo)</h3>
-       
         <div id="status" class="status pending">Cek koneksi...</div>
     </div>
 
@@ -87,7 +92,7 @@
         }
 
         async function testConnection() {
-            setStatus('Menghubungi ' + "API" + ' ...', 'pending');
+            setStatus('Menghubungi API ...', 'pending');
             try {
                 var res = await fetch(API + '/api/serveo', { cache: 'no-store' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -158,8 +163,6 @@
         }
 
         document.addEventListener('DOMContentLoaded', function(){
-            document.getElementById('apiUrlLabel').textContent = API;
-
             var dz = document.getElementById('dropZone');
             var fi = document.getElementById('fileInput');
             dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('dragover'); });
@@ -177,6 +180,61 @@
             testConnection();
             setInterval(testConnection, 30000);
         });
+
+        // ===== API WATCHDOG =====
+        (function () {
+            var CHECK_INTERVAL = 15000;
+            var MAX_FAIL = 2;
+            var failCount = 0;
+            var redirecting = false;
+
+            function balikKeGateway() {
+                if (redirecting) return;
+                redirecting = true;
+                sessionStorage.setItem("balik_dari_disconnect", "1");
+                sessionStorage.removeItem("active_service");
+
+                var ov = document.createElement("div");
+                ov.className = "watchdog-overlay";
+                ov.innerHTML =
+                    '<div class="ico">⚠️</div>' +
+                    '<h2>Koneksi ke server terputus</h2>' +
+                    '<p>Mengalihkan kembali ke halaman utama...</p>';
+                document.body.appendChild(ov);
+
+                setTimeout(function () {
+                    window.location.replace("./index.html");
+                }, 1500);
+            }
+
+            function cekApi() {
+                if (redirecting) return;
+                var ctrl = new AbortController();
+                var t = setTimeout(function () { ctrl.abort(); }, 6000);
+                fetch(API + "/api/serveo", {
+                    method: "GET", cache: "no-store", signal: ctrl.signal
+                })
+                .then(function (res) {
+                    clearTimeout(t);
+                    if (res.ok) {
+                        failCount = 0;
+                    } else {
+                        failCount++;
+                        if (failCount >= MAX_FAIL) balikKeGateway();
+                    }
+                })
+                .catch(function () {
+                    clearTimeout(t);
+                    failCount++;
+                    if (failCount >= MAX_FAIL) balikKeGateway();
+                });
+            }
+
+            setTimeout(function () {
+                cekApi();
+                setInterval(cekApi, CHECK_INTERVAL);
+            }, 5000);
+        })();
     </script>
 </body>
 </html>
